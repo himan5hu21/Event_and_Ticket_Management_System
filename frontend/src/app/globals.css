@@ -41,8 +41,11 @@
   --radius-lg: var(--radius);
   --radius-xl: calc(var(--radius) + 4px);
 
-  --color-customer-primary: var(var(--customer-primary));
-  --color-customer-secondary: var(var(--customer-secondary));
+  --color-customer-primary: var(--customer-primary);
+  --color-customer-secondary: var(--customer-secondary);
+
+  --color-pure-white: var(--pure-white);
+  --color-pure-black: var(--pure-black);
 }
 
 :root {
@@ -90,6 +93,9 @@
   --success: oklch(0.72 0.143 162.48); /* #4ADE80 */
   --warning: oklch(0.88 0.163 91.936); /* #FACC15 */
   --error: oklch(0.82 0.137 22.216); /* #F87171 */
+
+  --pure-white: #ffffff;
+  --pure-black: #000000;
 }
 
 .dark {

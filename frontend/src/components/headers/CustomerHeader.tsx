@@ -48,7 +48,7 @@ export default function CustomerHeader() {
               </Link>
               <Link 
                 href="/auth/signup" 
-                className="px-4 py-2 text-sm font-medium bg-customer-primary text-foreground rounded-md hover:bg-customer-primary transition-colors shadow-sm hover:shadow-md focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-customer-primary"
+                className="px-4 py-2 text-sm font-medium bg-customer-primary text-pure-white rounded-md hover:bg-customer-secondary transition-colors shadow-sm hover:shadow-md"
               >
                 Sign Up
               </Link>
