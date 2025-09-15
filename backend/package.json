@@ -8,6 +8,7 @@
     "bcryptjs": "^3.0.2",
     "cloudinary": "^2.7.0",
     "cookie-parser": "^1.4.7",
+    "cors": "^2.8.5",
     "dotenv": "^17.2.1",
     "express": "^5.1.0",
     "jsonwebtoken": "^9.0.2",
@@ -15,10 +16,10 @@
     "multer": "^2.0.2",
     "nanoid": "^5.1.5",
     "node-cron": "^4.2.1",
-    "razorpay": "^2.9.6",
-    "puppeteer": "^24.18.0",
     "nodemailer": "^7.0.6",
-    "qrcode": "^1.5.4"
+    "puppeteer": "^24.18.0",
+    "qrcode": "^1.5.4",
+    "razorpay": "^2.9.6"
   },
   "devDependencies": {
     "nodemon": "^3.1.10"

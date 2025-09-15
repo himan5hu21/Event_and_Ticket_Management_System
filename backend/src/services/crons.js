@@ -76,6 +76,7 @@ const initCronJobs = () => {
         // For each day of the event, reset "used" status to "pending" at midnight
         const eventStart = new Date(event.startDate);
         const eventEnd = new Date(event.endDate);
+        const today = new Date().toISOString().split('T')[0];
         
         // Only reset if we're in the middle of a multi-day event
         if (eventEnd > eventStart) {
@@ -131,7 +132,8 @@ const initCronJobs = () => {
       });
 
       for (const event of activeMultiDayEvents) {
-        // Add new pending check-in entry for today
+        const today = new Date().toISOString().split('T')[0];
+        console.log(`Cleaning up expired events for ${today}`);
         await Ticket.updateMany(
           {
             eventId: event._id,

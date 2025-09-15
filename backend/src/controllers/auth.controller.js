@@ -74,3 +74,18 @@ export const logoutUser = async (req, res, next) => {
     next(err);
   }
 };
+
+export const getMe = async (req, res, next) => {
+  try {
+    const { password: _, ...userData } = req.user._doc;
+    
+    res.success(
+      {
+        ...userData,
+      },
+      "User data retrieved successfully"
+    );
+  } catch (err) {
+    next(err);
+  }
+};

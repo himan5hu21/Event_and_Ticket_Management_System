@@ -46,6 +46,21 @@
 
   --color-pure-white: var(--pure-white);
   --color-pure-black: var(--pure-black);
+
+  /* Admin UI colors */
+  --color-admin-header-bg: var(--admin-header-bg);
+  --color-admin-header-border: var(--admin-header-border);
+  --color-admin-sidebar-bg: var(--admin-sidebar-bg);
+  --color-admin-sidebar-border: var(--admin-sidebar-border);
+  --color-admin-text-primary: var(--admin-text-primary);
+  --color-admin-text-secondary: var(--admin-text-secondary);
+  --color-admin-text-muted: var(--admin-text-muted);
+  --color-admin-bg-primary: var(--admin-bg-primary);
+  --color-admin-bg-secondary: var(--admin-bg-secondary);
+  --color-admin-bg-accent: var(--admin-bg-accent);
+  --color-admin-hover-bg: var(--admin-hover-bg);
+  --color-admin-active-bg: var(--admin-active-bg);
+  --color-admin-notification-bg: var(--admin-notification-bg);
 }
 
 :root {
@@ -96,6 +111,21 @@
 
   --pure-white: #ffffff;
   --pure-black: #000000;
+
+  /* Admin-specific UI colors */
+  --admin-header-bg: oklch(1 0 0);
+  --admin-header-border: oklch(0.929 0.013 255.508);
+  --admin-sidebar-bg: oklch(1 0 0);
+  --admin-sidebar-border: oklch(0.929 0.013 255.508);
+  --admin-text-primary: oklch(0.145 0 0);
+  --admin-text-secondary: oklch(0.554 0.046 257.417);
+  --admin-text-muted: oklch(0.704 0.04 256.788);
+  --admin-bg-primary: oklch(1 0 0);
+  --admin-bg-secondary: oklch(0.968 0.007 247.896);
+  --admin-bg-accent: oklch(0.929 0.013 255.508);
+  --admin-hover-bg: oklch(0.968 0.007 247.896);
+  --admin-active-bg: oklch(0.929 0.013 255.508);
+  --admin-notification-bg: oklch(0.577 0.245 27.325);
 }
 
 .dark {
@@ -141,6 +171,21 @@
   --success: oklch(0.75 0.143 162.48); /* Lighter success for dark mode */
   --warning: oklch(0.85 0.163 91.936); /* Lighter warning for dark mode */
   --error: oklch(0.85 0.137 22.216); /* Lighter error for dark mode */
+
+  /* Dark mode admin-specific UI colors */
+  --admin-header-bg: oklch(0.208 0.042 265.755);
+  --admin-header-border: oklch(1 0 0 / 10%);
+  --admin-sidebar-bg: oklch(0.208 0.042 265.755);
+  --admin-sidebar-border: oklch(1 0 0 / 10%);
+  --admin-text-primary: oklch(0.984 0.003 247.858);
+  --admin-text-secondary: oklch(0.704 0.04 256.788);
+  --admin-text-muted: oklch(0.554 0.046 257.417);
+  --admin-bg-primary: oklch(0.208 0.042 265.755);
+  --admin-bg-secondary: oklch(0.279 0.041 260.031);
+  --admin-bg-accent: oklch(0.129 0.042 264.695);
+  --admin-hover-bg: oklch(0.279 0.041 260.031);
+  --admin-active-bg: oklch(0.488 0.243 264.376);
+  --admin-notification-bg: oklch(0.704 0.191 22.216);
 }
 
 @layer base {

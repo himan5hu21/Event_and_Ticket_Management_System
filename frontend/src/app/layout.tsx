@@ -2,9 +2,16 @@ import type { Metadata } from "next";
 import { Geist, Geist_Mono } from "next/font/google";
 import "./globals.css";
 import { ThemeProvider } from "@/components/theme/theme-provider";
+import { AuthProvider } from "@/contexts/AuthContext";
+import { LoadingProvider } from "@/contexts/LoadingContext";
+import QueryProvider from "@/providers/QueryProvider";
 import React from "react";
 import ClientWrapper from "@/components/wrappers/client-wrapper";
 import { ExtensionCleanup } from "@/components/system/extensionCleanup";
+import { Toaster } from "@/components/ui/sonner";
+import GlobalLoader from "@/components/GlobalLoader";
+import PageLoader from "@/components/PageLoader";
+import RouteLoader from "@/components/RouteLoader";
 
 const geistSans = Geist({
   variable: "--font-geist-sans",
@@ -30,17 +37,27 @@ export default function RootLayout({ children }: RootLayoutProps) {
     <html lang="en" suppressHydrationWarning>
       <body
         className={`${geistSans.variable} ${geistMono.variable} antialiased`}
+        suppressHydrationWarning
       >
         <ClientWrapper>
-          <ThemeProvider
-            attribute="class"
-            defaultTheme="system"
-            enableSystem
-            disableTransitionOnChange
-          >
-            <ExtensionCleanup />
-            {children}
-          </ThemeProvider>
+          <QueryProvider>
+            <ThemeProvider
+              attribute="class"
+              defaultTheme="system"
+              enableSystem
+              disableTransitionOnChange
+            >
+              <AuthProvider>
+                <LoadingProvider>
+                  <ExtensionCleanup />
+                  <RouteLoader />
+                  {children}
+                  <GlobalLoader />
+                  <Toaster />
+                </LoadingProvider>
+              </AuthProvider>
+            </ThemeProvider>
+          </QueryProvider>
         </ClientWrapper>
       </body>
     </html>
