@@ -30,29 +30,44 @@ export const EventSchema = z.object({
   _id: z.string(),
   title: z.string(),
   description: z.string(),
-  date: z.string(),
-  time: z.string(),
-  location: z.string(),
+  startDate: z.string(),
+  endDate: z.string().optional(),
+  location: z.string().optional(),
   category: z.string(),
-  price: z.number(),
-  totalTickets: z.number(),
-  availableTickets: z.number(),
-  image: z.string().optional(),
-  organizer: z.string(),
-  status: z.enum(['draft', 'published', 'cancelled']),
+  subcategory: z.string().optional(),
+  tickets: z.array(z.object({
+    type: z.string(),
+    price: z.number(),
+    quantity: z.number(),
+    sold: z.number().optional(),
+  })),
+  imageUrl: z.string().optional(),
+  imageId: z.string().optional(),
+  createdBy: z.object({
+    _id: z.string(),
+    name: z.string(),
+    organization: z.string().nullable().optional(),
+  }),
+  verified: z.boolean().optional(),
+  status: z.enum(['draft', 'pending', 'active', 'cancelled']),
   createdAt: z.string(),
   updatedAt: z.string(),
+  __v: z.number().optional(),
 });
 
 export const CreateEventSchema = z.object({
-  title: z.string().min(1),
-  description: z.string().min(1),
-  date: z.string(),
-  time: z.string(),
-  location: z.string().min(1),
-  category: z.string().min(1),
-  price: z.number().min(0),
-  totalTickets: z.number().min(1),
+  title: z.string().min(1, 'Title is required'),
+  description: z.string().min(1, 'Description is required'),
+  startDate: z.string().min(1, 'Start date is required'),
+  endDate: z.string().optional(),
+  location: z.string().min(1, 'Location is required'),
+  category: z.string().min(1, 'Category is required'),
+  subcategory: z.string().optional(),
+  tickets: z.array(z.object({
+    type: z.string().min(1, 'Ticket type is required'),
+    price: z.number().min(0, 'Price must be 0 or more'),
+    quantity: z.number().min(1, 'Quantity must be at least 1'),
+  })).min(1, 'At least one ticket type is required'),
   image: z.string().optional(),
 });
 
@@ -92,7 +107,7 @@ export const OrderSchema = z.object({
 export const ApiResponseSchema = z.object({
   success: z.boolean(),
   message: z.string(),
-  data: z.any().optional(),
+  data: z.any().optional().nullable(),
 });
 
 export const PaginatedResponseSchema = z.object({
@@ -118,7 +133,11 @@ export type UpdateEventData = z.infer<typeof UpdateEventSchema>;
 export type Ticket = z.infer<typeof TicketSchema>;
 export type CreateTicketData = z.infer<typeof CreateTicketSchema>;
 export type Order = z.infer<typeof OrderSchema>;
-export type ApiResponse<T = any> = z.infer<typeof ApiResponseSchema> & { data?: T };
+export type ApiResponse<T = any> = z.infer<typeof ApiResponseSchema> & { 
+  data: T | null | undefined;
+  success: boolean;
+  message: string;
+};
 export type PaginatedResponse<T = any> = z.infer<typeof PaginatedResponseSchema> & { 
   data: { 
     items: T[];

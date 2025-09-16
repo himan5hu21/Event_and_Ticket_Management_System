@@ -41,8 +41,20 @@
   --radius-lg: var(--radius);
   --radius-xl: calc(var(--radius) + 4px);
 
+  /* Customer UI colors */
   --color-customer-primary: var(--customer-primary);
+  --color-customer-primary-light: var(--customer-primary-light);
+  --color-customer-primary-dark: var(--customer-primary-dark);
   --color-customer-secondary: var(--customer-secondary);
+  --color-customer-accent: var(--customer-accent);
+  --color-customer-success: var(--customer-success);
+  --color-customer-warning: var(--customer-warning);
+  --color-customer-error: var(--customer-error);
+  --color-customer-text: var(--customer-text);
+  --color-customer-text-muted: var(--customer-text-muted);
+  --color-customer-bg: var(--customer-bg);
+  --color-customer-card: var(--customer-card);
+  --color-customer-border: var(--customer-border);
 
   --color-pure-white: var(--pure-white);
   --color-pure-black: var(--pure-black);
@@ -65,9 +77,24 @@
 
 :root {
   --radius: 0.625rem;
-  --background: oklch(1 0 0);
-  --foreground: oklch(0.145 0 0);
-  --card: oklch(1 0 0);
+  /* Customer color palette - Light mode */
+  --customer-primary: oklch(0.55 0.25 264);
+  --customer-primary-light: oklch(0.65 0.2 264);
+  --customer-primary-dark: oklch(0.45 0.25 264);
+  --customer-secondary: oklch(0.85 0.2 180);
+  --customer-accent: oklch(0.7 0.25 350);
+  --customer-success: oklch(0.7 0.25 150);
+  --customer-warning: oklch(0.8 0.25 60);
+  --customer-error: oklch(0.7 0.25 30);
+  --customer-text: oklch(0.15 0 0);
+  --customer-text-muted: oklch(0.4 0 0);
+  --customer-bg: oklch(0.98 0 0);
+  --customer-card: oklch(1 0 0);
+  --customer-border: oklch(0.9 0 0);
+  
+  --background: var(--customer-bg);
+  --foreground: var(--customer-text);
+  --card: var(--customer-card);
   --card-foreground: oklch(0.145 0 0);
   --popover: oklch(1 0 0);
   --popover-foreground: oklch(0.145 0 0);
@@ -129,10 +156,25 @@
 }
 
 .dark {
-  --background: oklch(0.129 0.042 264.695);
-  --foreground: oklch(0.984 0.003 247.858);
-  --card: oklch(0.208 0.042 265.755);
-  --card-foreground: oklch(0.984 0.003 247.858);
+  /* Customer color palette - Dark mode */
+  --customer-primary: oklch(0.6 0.2 264);
+  --customer-primary-light: oklch(0.7 0.15 264);
+  --customer-primary-dark: oklch(0.5 0.2 264);
+  --customer-secondary: oklch(0.7 0.15 180);
+  --customer-accent: oklch(0.75 0.2 350);
+  --customer-success: oklch(0.75 0.2 150);
+  --customer-warning: oklch(0.85 0.2 60);
+  --customer-error: oklch(0.75 0.2 30);
+  --customer-text: oklch(0.95 0 0);
+  --customer-text-muted: oklch(0.7 0 0);
+  --customer-bg: oklch(0.12 0.01 260);
+  --customer-card: oklch(0.15 0.01 260);
+  --customer-border: oklch(0.2 0.01 260);
+  
+  --background: var(--customer-bg);
+  --foreground: var(--customer-text);
+  --card: var(--customer-card);
+  --card-foreground: var(--customer-text);
   --popover: oklch(0.208 0.042 265.755);
   --popover-foreground: oklch(0.984 0.003 247.858);
   --primary: oklch(0.929 0.013 255.508);

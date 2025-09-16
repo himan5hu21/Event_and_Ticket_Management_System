@@ -64,6 +64,7 @@ yarn-error.log*
 .env.*     # like .env.local, .env.production
 /backend/.env
 /frontend/.env
+/frontend/.env.local
 
 # =========================
 # IDE / Editor files

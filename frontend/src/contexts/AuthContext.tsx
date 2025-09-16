@@ -33,6 +33,8 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
   const logoutMutation = useLogout();
 
   const user = meData?.success ? meData.data : null;
+
+  console.log("User Response:",user);
   
   // Don't consider user authenticated if there's a 401 error
   const isAuthenticated = !!user && !error;
