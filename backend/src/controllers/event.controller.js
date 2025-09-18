@@ -296,8 +296,27 @@ export const getAllEvents = async (req, res, next) => {
 
     const events = await Event.aggregate(pipeline);
 
+    // Return empty array instead of 404 for better frontend handling
     if (!events.length) {
-      return res.notFound("No events found");
+      return res.success(
+        {
+          events: [],
+          filters: {
+            verified,
+            createdBy,
+            category,
+            search,
+            ...filters,
+          },
+          pagination: {
+            total: 0,
+            page: pageNum,
+            limit: pageLimit,
+            totalPages: 0,
+          },
+        },
+        "No events found"
+      );
     }
 
     res.success(

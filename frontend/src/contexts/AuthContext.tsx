@@ -33,20 +33,22 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
   const logoutMutation = useLogout();
 
   const user = meData?.success ? meData.data : null;
-
-  console.log("User Response:",user);
-  
   // Don't consider user authenticated if there's a 401 error
   const isAuthenticated = !!user && !error;
 
-  const value: AuthContextType = {
-    user: user || null,
+    // Debugging - will only log once in production
+    if (process.env.NODE_ENV === 'development') {
+      console.log('[AuthProvider] Render - User:', user);
+    }
+
+  const value: AuthContextType = React.useMemo(() => ({
+    user,
     isLoading,
     isAuthenticated,
     login: loginMutation,
     logout: logoutMutation,
     refetch,
-  };
+  }), [user, isLoading, isAuthenticated, loginMutation, logoutMutation, refetch]);
 
   return (
     <AuthContext.Provider value={value}>

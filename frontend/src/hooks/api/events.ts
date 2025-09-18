@@ -80,6 +80,7 @@ const eventApi = {
     page?: number;
     limit?: number;
     status?: string;
+    search?: string;
   }): Promise<PaginatedResponse<Event>> => {
     const response = await apiClient.get('/event/owner', { params });
     return response.data;
@@ -133,6 +134,7 @@ export const useMyEvents = (params?: {
   page?: number;
   limit?: number;
   status?: string;
+  search?: string;
 }) => {
   return useQuery<PaginatedResponse<Event>, Error>({
     queryKey: ['events', 'my-events', params],
