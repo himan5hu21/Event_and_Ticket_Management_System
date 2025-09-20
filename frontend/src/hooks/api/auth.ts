@@ -143,5 +143,6 @@ export const useMe = () => {
     refetchOnWindowFocus: false,
     refetchOnMount: false,
     refetchOnReconnect: false,
+    select: (data) => data,
   });
 };

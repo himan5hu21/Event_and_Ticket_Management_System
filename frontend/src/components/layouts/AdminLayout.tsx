@@ -2,6 +2,7 @@ import { ReactNode } from "react";
 import AdminSidebar from "../sidebars/AdminSidebar";
 import AdminHeader from "../headers/AdminHeader";
 import AdminFooter from "../footers/AdminFooter";
+import PageLoader from "../PageLoader";
 
 interface LayoutProps {
   children: ReactNode;
@@ -9,19 +10,33 @@ interface LayoutProps {
 
 export default function AdminLayout({ children }: LayoutProps) {
   return (
-    <div className="flex min-h-screen bg-background">
-      {/* Sidebar */}
-      <AdminSidebar />
+    <div className="flex h-screen w-full overflow-hidden bg-background">
+      {/* Fixed Sidebar */}
+      <div className="h-full">
+        <AdminSidebar />
+      </div>
 
-      {/* Main Area */}
-      <div className="flex flex-col flex-1">
-        <AdminHeader />
-        <main className="flex-1 p-6 overflow-auto bg-admin-bg-secondary">
-          <div className="max-w-7xl mx-auto">
-            {children}
+      {/* Scrollable Main Area */}
+      <div className="flex flex-col flex-1 min-w-0 overflow-hidden">
+        {/* Fixed Header */}
+        <div className="shrink-0">
+          <AdminHeader />
+        </div>
+        
+        {/* Scrollable Content */}
+        <div className="flex-1 overflow-y-auto bg-admin-bg-secondary">
+          <main className="p-6 min-h-full">
+            <div className="max-w-7xl mx-auto h-full">
+              <PageLoader />
+              {children}
+            </div>
+          </main>
+          
+          {/* Footer */}
+          <div className="shrink-0">
+            <AdminFooter />
           </div>
-        </main>
-        <AdminFooter />
+        </div>
       </div>
     </div>
   );

@@ -2,19 +2,19 @@ import { useQuery } from '@tanstack/react-query';
 import { apiClient } from '@/lib/api-client';
 import { ApiResponse } from '@/lib/schemas';
 
+type DashboardStats = {
+  pendingVerifications: number;
+  activeUsers: number;
+  eventsToday: number;
+  pendingEvents: number;
+  todayOrders: number;
+  totalRevenue: number;
+};
+
 // Analytics API functions
 const analyticsApi = {
   getDashboardStats: async (): Promise<ApiResponse<{
-    totalUsers: number;
-    totalEvents: number;
-    totalTickets: number;
-    totalRevenue: number;
-    pendingVerifications: number;
-    recentActivity: Array<{
-      type: string;
-      message: string;
-      timestamp: string;
-    }>;
+    stats: DashboardStats;
   }>> => {
     const response = await apiClient.get('/analytics/dashboard');
     return response.data;
@@ -82,10 +82,13 @@ export const useDashboardStats = () => {
   return useQuery({
     queryKey: ['analytics', 'dashboard'],
     queryFn: analyticsApi.getDashboardStats,
+    select: (data) => data.data.stats, // Extract the stats object from the response
     staleTime: 5 * 60 * 1000, // 5 minutes
     refetchInterval: 5 * 60 * 1000, // Refetch every 5 minutes
   });
 };
+
+export type { DashboardStats };
 
 export const useUserStats = (params?: {
   dateFrom?: string;

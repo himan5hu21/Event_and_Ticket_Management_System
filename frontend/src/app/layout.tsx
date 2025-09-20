@@ -6,6 +6,7 @@ import { AuthProvider } from "@/contexts/AuthContext";
 import { LoadingProvider } from "@/contexts/LoadingContext";
 import QueryProvider from "@/providers/QueryProvider";
 import React from "react";
+import RouteProtection from "@/components/auth/RouteProtection";
 import ClientWrapper from "@/components/wrappers/client-wrapper";
 import { ExtensionCleanup } from "@/components/system/extensionCleanup";
 import { Toaster } from "@/components/ui/sonner";
@@ -50,9 +51,11 @@ export default function RootLayout({ children }: RootLayoutProps) {
               <AuthProvider>
                 <LoadingProvider>
                   <ExtensionCleanup />
+                  <RouteProtection>
+                    <GlobalLoader />
                   <RouteLoader />
-                  {children}
-                  <GlobalLoader />
+                    {children}
+                  </RouteProtection>
                   <Toaster />
                 </LoadingProvider>
               </AuthProvider>

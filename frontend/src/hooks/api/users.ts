@@ -10,9 +10,24 @@ const userApi = {
     role?: string;
     verified?: boolean;
     search?: string;
+    sortBy?: string;
+    sortOrder?: 'asc' | 'desc';
   }): Promise<PaginatedResponse<User>> => {
     const response = await apiClient.get('/users', { params });
-    return response.data;
+    const { users, pagination } = response.data.data;
+    
+    return {
+      success: response.data.success,
+      message: response.data.message,
+      data: {
+        items: users,
+        totalItems: pagination.total,
+        totalPages: pagination.totalPages,
+        currentPage: pagination.page,
+        hasNextPage: pagination.page < pagination.totalPages,
+        hasPrevPage: pagination.page > 1
+      }
+    };
   },
 
   getUserById: async (id: string): Promise<ApiResponse<User>> => {
@@ -47,16 +62,21 @@ const userApi = {
 };
 
 // User hooks
-export const useUsers = (params?: {
+type UseUsersParams = {
   page?: number;
   limit?: number;
   role?: string;
   verified?: boolean;
   search?: string;
-}) => {
-  return useQuery({
+  organization?: string;
+  sortBy?: string;
+  order?: 'asc' | 'desc';
+};
+
+export const useUsers = (params?: UseUsersParams) => {
+  return useQuery<PaginatedResponse<User>, Error>({
     queryKey: ['users', params],
-    queryFn: () => userApi.getUsers(params),
+    queryFn: () => userApi.getUsers(params as UseUsersParams),
     staleTime: 2 * 60 * 1000, // 2 minutes
   });
 };

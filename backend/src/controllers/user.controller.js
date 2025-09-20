@@ -45,7 +45,15 @@ export const getAllUsers = async (req, res, next) => {
         if (verified !== undefined) queryFilter.verified = verified === "true";
         if (organization)
             queryFilter.organization = {$regex: new RegExp(organization, "i")};
-        if (role) queryFilter.role = role;
+        if (role) {
+            // Handle both single role and comma-separated roles
+            const roles = Array.isArray(role) ? role : role.split(',');
+            if (roles.length > 1) {
+                queryFilter.role = { $in: roles };
+            } else if (roles.length === 1) {
+                queryFilter.role = roles[0];
+            }
+        }
 
         if (search) {
             queryFilter.$or = [
@@ -85,13 +93,9 @@ export const getAllUsers = async (req, res, next) => {
 
         const totalUsers = await User.countDocuments(queryFilter);
 
-        if (!users.length) {
-            return res.notFound("No users found");
-        }
-
         res.success(
             {
-                users,
+                users: users || [],
                 pagination: {
                     total: totalUsers,
                     page: pageNum,
@@ -99,7 +103,7 @@ export const getAllUsers = async (req, res, next) => {
                     totalPages: Math.ceil(totalUsers / pageLimit),
                 },
             },
-            "Users fetched successfully"
+            users.length ? "Users fetched successfully" : "No users found"
         );
     } catch (err) {
         next(err);

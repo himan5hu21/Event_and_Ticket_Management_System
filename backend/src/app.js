@@ -7,6 +7,7 @@ import authRouter from "./routes/auth.route.js";
 import eventRouter from "./routes/event.route.js";
 import userRouter from "./routes/user.route.js";
 import orderRouter from "./routes/order.route.js";
+import analyticsRouter from "./routes/analytics.route.js";
 
 const app = express();
 
@@ -28,6 +29,7 @@ app.use("/auth", authRouter);
 app.use("/users", userRouter);
 app.use("/event", eventRouter);
 app.use("/orders", orderRouter);
+app.use("/analytics", analyticsRouter);
 app.use("/", (req, res) => {
   res.send("Api is running... this message is showing because the the entered route is not working. Solve the issues.");
 });
