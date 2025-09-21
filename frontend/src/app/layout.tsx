@@ -42,24 +42,23 @@ export default function RootLayout({ children }: RootLayoutProps) {
       >
         <ClientWrapper>
           <QueryProvider>
-            <ThemeProvider
-              attribute="class"
-              defaultTheme="system"
-              enableSystem
-              disableTransitionOnChange
-            >
-              <AuthProvider>
-                <LoadingProvider>
+            <LoadingProvider>
+              <ThemeProvider
+                attribute="class"
+                defaultTheme="system"
+                enableSystem
+                disableTransitionOnChange
+              >
+                <AuthProvider>
                   <ExtensionCleanup />
                   <RouteProtection>
                     <GlobalLoader />
-                  <RouteLoader />
                     {children}
+                    <Toaster position="top-center" richColors />
                   </RouteProtection>
-                  <Toaster />
-                </LoadingProvider>
-              </AuthProvider>
-            </ThemeProvider>
+                </AuthProvider>
+              </ThemeProvider>
+            </LoadingProvider>
           </QueryProvider>
         </ClientWrapper>
       </body>

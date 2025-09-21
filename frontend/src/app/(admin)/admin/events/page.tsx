@@ -19,20 +19,59 @@ import {
 } from "lucide-react";
 import { useEvents } from "@/hooks/api/events";
 import { format } from "date-fns";
-import { useState } from "react";
+import { useState, useEffect } from "react";
+import { useLoading } from "@/contexts/LoadingContext";
 import Image from "next/image";
 
 export default function AdminEventsPage() {
   const [search, setSearch] = useState("");
   const [statusFilter, setStatusFilter] = useState("");
   const [categoryFilter, setCategoryFilter] = useState("");
+  const { setLoading } = useLoading();
 
-  const { data: eventsResponse, isLoading, error } = useEvents({
+  // Create a stable reference for the query params
+  const queryParams = {
     search,
     status: statusFilter || undefined,
     category: categoryFilter || undefined,
     limit: 20,
-  });
+  };
+
+  const { data: eventsResponse, isLoading, error, refetch: refetchEvents } = useEvents(queryParams);
+
+  // Update loading state when data is being fetched
+  useEffect(() => {
+    setLoading(isLoading, 'Loading events...');
+    
+    // Clean up loading state when component unmounts
+    return () => {
+      setLoading(false);
+    };
+  }, [isLoading, setLoading]);
+  
+  // Refetch data when query params change
+  useEffect(() => {
+    let isMounted = true;
+    
+    const refetchData = async () => {
+      try {
+        if (isMounted) {
+          await refetchEvents();
+        }
+      } catch (error) {
+        console.error('Error refetching events:', error);
+      }
+    };
+    
+    // Only refetch if we're not in the initial load
+    if (eventsResponse) {
+      refetchData();
+    }
+    
+    return () => {
+      isMounted = false;
+    };
+  }, [JSON.stringify(queryParams)]); // Stringify to prevent unnecessary re-renders
 
   const events = eventsResponse?.data?.items || [];
 

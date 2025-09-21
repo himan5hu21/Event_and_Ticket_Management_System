@@ -1,9 +1,10 @@
 "use client";
 
 // External
-import { useState, useCallback } from "react";
+import { useState, useCallback, useEffect, useMemo } from "react";
 import { format } from "date-fns";
 import { UseQueryResult } from "@tanstack/react-query";
+import { useQueryClient } from '@tanstack/react-query';
 import {
   ChevronLeft,
   ChevronRight,
@@ -26,11 +27,12 @@ import {
 
 // Internal Hooks
 import { useUsers as useBaseUsers } from "@/hooks/api";
+import { useLoading } from "@/contexts/LoadingContext";
 import { User, PaginatedResponse } from "@/lib/schemas";
 
 // UI Components
 import { Button } from "@/components/ui/button";
-import { Card, CardContent, CardFooter, CardHeader, CardTitle } from "@/components/ui/card";
+import { Card, CardContent, CardFooter, CardHeader } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
 import { Badge } from "@/components/ui/badge";
 import Loader from "@/components/ui/loader";
@@ -44,48 +46,12 @@ import {
   DropdownMenuCheckboxItem,
 } from "@/components/ui/dropdown-menu";
 
-// Types
-type UseUsersReturn = Omit<UseQueryResult<PaginatedResponse<User>, Error>, 'refetch'> & {
-  refetch: () => Promise<void>;
-};
-
-// Custom hook with proper typing
-function useUsers(params?: {
-  page?: number;
-  limit?: number;
-  role?: string;
-  verified?: boolean;
-  search?: string;
-  sortBy?: string;
-  organization?: string;
-  order?: 'asc' | 'desc';
-}): UseUsersReturn {
-  const result = useBaseUsers(params);
-
-  const refetch = useCallback(async () => {
-    try {
-      await result.refetch();
-    } catch (error) {
-      console.error('Error in refetch:', error);
-      throw error;
-    }
-  }, [result]);
-
-  return {
-    ...result,
-    refetch,
-  };
-}
-
 import { useSearchParams } from 'next/navigation';
-import { useRouter } from 'next/navigation';
-import { useEffect } from 'react';
 
-const ITEMS_PER_PAGE = 10;
+// No need for a custom hook, we'll use useBaseUsers directly
 
 export default function AdminUsersPage() {
   const searchParams = useSearchParams();
-  const router = useRouter();
   const roleParam = searchParams.get('role');
   
   const [search, setSearch] = useState("");
@@ -98,6 +64,8 @@ export default function AdminUsersPage() {
   const [itemsPerPage, setItemsPerPage] = useState(10);
   const [currentView, setCurrentView] = useState<'all' | 'event-managers'>('all');
 
+  const { setLoading } = useLoading();
+  
   // Update filters when URL changes
   useEffect(() => {
     if (roleParam === 'event-manager') {
@@ -108,24 +76,62 @@ export default function AdminUsersPage() {
       setCurrentView('all');
     }
   }, [roleParam]);
-
-  const {
-    data: usersResponse,
-    isLoading,
-    error,
-    refetch: refetchUsers
-  } = useUsers({
+  
+  // Create query params
+  const queryParams = {
     search,
-    organization: organizationFilter,
+    organization: organizationFilter || undefined,
     role: roleFilter.length > 0 && roleFilter.length < 3 ? roleFilter.join(",") : undefined,
     verified: verifiedFilter === null ? undefined : verifiedFilter,
     sortBy,
     order: sortOrder,
     page: currentPage,
     limit: itemsPerPage,
-  });
+  };
 
-  const users = usersResponse?.data?.items || [];
+  // Memoize the query params to prevent unnecessary refetches
+  const memoizedQueryParams = useMemo(() => ({
+    search: queryParams.search,
+    organization: queryParams.organization,
+    role: queryParams.role,
+    verified: queryParams.verified,
+    sortBy: queryParams.sortBy,
+    order: queryParams.order,
+    page: queryParams.page,
+    limit: queryParams.limit,
+  }), [
+    queryParams.search,
+    queryParams.organization,
+    queryParams.role,
+    queryParams.verified,
+    queryParams.sortBy,
+    queryParams.order,
+    queryParams.page,
+    queryParams.limit,
+  ]);
+
+  // Memoize the refetch function
+  const { data: usersResponse, isLoading, error, refetch } = useBaseUsers(memoizedQueryParams);
+  
+  // Memoize the refetch function to prevent unnecessary re-renders
+  const refetchUsers = useCallback(async () => {
+    try {
+      await refetch();
+    } catch (error) {
+      console.error('Error refetching users:', error);
+    }
+  }, [refetch]);
+  
+  // Update loading state when data is being fetched
+  useEffect(() => {
+    setLoading(isLoading, 'Loading users...');
+    
+    // Clean up loading state when component unmounts
+    return () => {
+      setLoading(false);
+    };
+  }, [isLoading, setLoading]);
+
   const pagination = usersResponse?.data;
   const totalPages = pagination?.totalPages || 1;
   const totalItems = pagination?.totalItems || 0;

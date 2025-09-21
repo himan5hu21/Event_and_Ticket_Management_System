@@ -5,6 +5,7 @@ import { useRouter, usePathname } from 'next/navigation';
 import { useEffect, ReactNode } from 'react';
 import { Loader2 } from 'lucide-react';
 import { cn } from '@/lib/utils';
+import { useLoading } from '@/contexts/LoadingContext';
 
 interface RouteProtectionProps {
   children: ReactNode;
@@ -41,12 +42,22 @@ export default function RouteProtection({
   ),
   loaderClassName = ''
 }: RouteProtectionProps) {
-  const { user, isLoading, isAuthenticated } = useAuth();
+  const { user, isLoading: isAuthLoading, isAuthenticated } = useAuth();
   const router = useRouter();
   const pathname = usePathname();
+  const { setLoading } = useLoading();
+  
+  // Show loading state while auth is being checked
+  useEffect(() => {
+    setLoading(isAuthLoading, 'Verifying session...');
+    
+    return () => {
+      setLoading(false);
+    };
+  }, [isAuthLoading, setLoading]);
 
   useEffect(() => {
-    if (isLoading) return;
+    if (isAuthLoading) return;
 
     // If it's a public path, no need to check auth
     if (PUBLIC_PATHS.includes(pathname)) return;
@@ -87,11 +98,11 @@ export default function RouteProtection({
         return;
       }
     }
-  }, [user, isLoading, isAuthenticated, allowedRoles, router, pathname]);
+  }, [user, isAuthLoading, isAuthenticated, allowedRoles, router, pathname]);
 
   // Show loading while checking auth state
-  if (isLoading) {
-    return <div className={cn("w-full", loaderClassName)}>{loaderComponent}</div>;
+  if (isAuthLoading) {
+    return loaderComponent;
   }
 
   // If it's a public path, render children directly
