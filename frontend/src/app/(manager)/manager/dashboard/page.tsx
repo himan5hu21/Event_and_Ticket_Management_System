@@ -1,5 +1,9 @@
+import DashboardLoader from "@/components/DashboardLoader";
+
 export default function ManagerDashBoard () {
   return (
-    <div>Hello</div>
+    <DashboardLoader>
+      <div>Hello</div>
+    </DashboardLoader>
   )
 }

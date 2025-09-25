@@ -63,6 +63,8 @@ const eventSchema = new Schema(
       enum: ["pending", "active", "completed", "cancelled"],
       default: "pending",
     },
+    tags: [{ type: String, trim: true }],
+    featured: { type: Boolean, default: false },
   },
   { timestamps: true }
 );

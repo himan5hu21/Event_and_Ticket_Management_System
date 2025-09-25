@@ -122,14 +122,21 @@ export const useVerifyUser = () => {
   const queryClient = useQueryClient();
   
   return useMutation({
-    mutationFn: userApi.verifyUser,
+    mutationFn: (userId: string) => userApi.verifyUser(userId),
     onSuccess: (data, userId) => {
+      // Invalidate both the users list and the specific user's data
       queryClient.invalidateQueries({ queryKey: ['users'] });
       queryClient.invalidateQueries({ queryKey: ['users', userId] });
-      if (data.data) {
+      
+      // Update the specific user's data in the cache if available
+      if (data?.data) {
         queryClient.setQueryData(['users', userId], data.data);
       }
     },
+    onError: (error) => {
+      console.error('Error verifying user:', error);
+      throw error; // Re-throw to be handled by the component
+    }
   });
 };
 
@@ -137,14 +144,21 @@ export const useUnverifyUser = () => {
   const queryClient = useQueryClient();
   
   return useMutation({
-    mutationFn: userApi.unverifyUser,
+    mutationFn: (userId: string) => userApi.unverifyUser(userId),
     onSuccess: (data, userId) => {
+      // Invalidate both the users list and the specific user's data
       queryClient.invalidateQueries({ queryKey: ['users'] });
       queryClient.invalidateQueries({ queryKey: ['users', userId] });
-      if (data.data) {
+      
+      // Update the specific user's data in the cache if available
+      if (data?.data) {
         queryClient.setQueryData(['users', userId], data.data);
       }
     },
+    onError: (error) => {
+      console.error('Error unverifying user:', error);
+      throw error; // Re-throw to be handled by the component
+    }
   });
 };
 

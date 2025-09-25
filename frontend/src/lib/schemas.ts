@@ -4,8 +4,11 @@ import { z } from 'zod';
 export const UserSchema = z.object({
   _id: z.string(),
   name: z.string(),
-  email: z.string().email(),
-  role: z.enum(['customer', 'admin', 'event-manager']),
+  email: z.email({ message: "Invalid email address" }),
+  phone: z.string()
+    .regex(/^\+?[1-9]\d{1,14}$/, "Invalid phone number") // E.164 format
+    .optional(),
+  role: z.enum(['customer', 'event-manager']),
   organization: z.string().optional(),
   verified: z.boolean(),
   createdAt: z.string(),
@@ -21,7 +24,7 @@ export const RegisterSchema = z.object({
   name: z.string().min(2),
   email: z.string().email(),
   password: z.string().min(3),
-  role: z.enum(['customer', 'admin', 'event-manager']),
+  role: z.enum(['customer', 'event-manager']),
   organization: z.string().optional(),
 });
 

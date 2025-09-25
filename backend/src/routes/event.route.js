@@ -40,4 +40,21 @@ router.get("/owner/", protect, checkEventPermission, getOwnedEvent);
 // Admin
 router.put("/verify/:eventId", protect, checkAdmin, verifyEvent);
 
+// Admin: Mark/unmark event as featured
+router.put("/feature/:eventId", protect, checkAdmin, async (req, res, next) => {
+  try {
+    const { eventId } = req.params;
+    const { featured } = req.body;
+    const event = await (await import("../models/event.model.js")).default.findByIdAndUpdate(
+      eventId,
+      { featured: !!featured },
+      { new: true }
+    );
+    if (!event) return res.notFound("Event not found");
+    res.success(event, `Event ${featured ? "marked as" : "removed from"} featured`);
+  } catch (err) {
+    next(err);
+  }
+});
+
 export default router;

@@ -1,3 +1,5 @@
+
+
 import type { Metadata } from "next";
 import { Geist, Geist_Mono } from "next/font/google";
 import "./globals.css";
@@ -13,6 +15,8 @@ import { Toaster } from "@/components/ui/sonner";
 import GlobalLoader from "@/components/GlobalLoader";
 import PageLoader from "@/components/PageLoader";
 import RouteLoader from "@/components/RouteLoader";
+import HydrationLoader from "@/components/HydrationLoader";
+import ClientLayoutWrapper from "@/components/ClientLayoutWrapper";
 
 const geistSans = Geist({
   variable: "--font-geist-sans",
@@ -52,8 +56,12 @@ export default function RootLayout({ children }: RootLayoutProps) {
                 <AuthProvider>
                   <ExtensionCleanup />
                   <RouteProtection>
-                    <GlobalLoader />
-                    {children}
+                    <RouteLoader />
+                    <PageLoader />
+                    <HydrationLoader />
+                    <ClientLayoutWrapper>
+                      {children}
+                    </ClientLayoutWrapper>
                     <Toaster position="top-center" richColors />
                   </RouteProtection>
                 </AuthProvider>
