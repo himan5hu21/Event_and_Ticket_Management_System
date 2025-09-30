@@ -2,264 +2,750 @@
 
 import RouteProtection from "@/components/auth/RouteProtection";
 import { Button } from "@/components/ui/button";
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
+import {
+  Card,
+  CardContent,
+  CardDescription,
+  CardHeader,
+  CardTitle,
+  CardFooter,
+} from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
 import { Badge } from "@/components/ui/badge";
-import { 
-  Calendar, 
-  Search, 
-  Filter, 
-  Plus,
-  MoreHorizontal, 
-  CheckCircle, 
-  XCircle, 
+import { Label } from "@/components/ui/label";
+import { Switch } from "@/components/ui/switch";
+import {
+  DropdownMenu,
+  DropdownMenuContent,
+  DropdownMenuItem,
+  DropdownMenuLabel,
+  DropdownMenuSeparator,
+  DropdownMenuTrigger,
+  DropdownMenuCheckboxItem,
+} from "@/components/ui/dropdown-menu";
+import {
+  Calendar,
+  Search,
+  Filter,
+  MoreHorizontal,
+  CheckCircle,
+  XCircle,
   Clock,
-  MapPin,
   Users,
   DollarSign,
-  Edit,
-  Eye
+  ChevronDown,
+  ChevronLeft,
+  ChevronRight,
+  Plus,
+  ArrowRight,
+  X,
+  Check,
 } from "lucide-react";
-import { useMyEvents } from "@/hooks/api/events";
-import { format } from "date-fns";
-import { useState } from "react";
+import { DateRange, Range } from "react-date-range";
+import { useState, useEffect } from "react";
 import Image from "next/image";
-import Link from "next/link";
+import { format } from "date-fns";
+import { useEvents } from "@/hooks/api/events";
+import "react-date-range/dist/styles.css";
+import "react-date-range/dist/theme/default.css";
 
-export default function ManagerEventsPage() {
+interface Ticket {
+  type: string;
+  price: number;
+  quantity: number;
+  sold: number;
+}
+
+interface Event {
+  _id: string;
+  title: string;
+  description: string;
+  status: "draft" | "pending" | "active" | "cancelled" | "completed";
+  startDate: string;
+  endDate?: string;
+  location: string;
+  tickets: Ticket[];
+  imageUrl: string;
+  category: string;
+  featured?: boolean;
+  organizer?: string;
+  createdAt?: string;
+  updatedAt?: string;
+}
+
+export default function AdminEventsPage() {
   const [search, setSearch] = useState("");
   const [statusFilter, setStatusFilter] = useState("");
+  const [categoryFilter, setCategoryFilter] = useState("");
+  const [dateRange, setDateRange] = useState<Range[]>([
+    {
+      startDate: undefined,
+      endDate: undefined,
+      key: "selection",
+    },
+  ]);
+  const [minPrice, setMinPrice] = useState("");
+  const [maxPrice, setMaxPrice] = useState("");
+  const [tags, setTags] = useState<string[]>([]);
+  const [tagInput, setTagInput] = useState("");
+  const [showFeatured, setShowFeatured] = useState(false);
+  const [currentPage, setCurrentPage] = useState(1);
+  const [pageSize, setPageSize] = useState(10);
 
-  const { data: eventsResponse, isLoading, error } = useMyEvents({
-    search,
+  const queryParams = {
+    search: search || undefined,
     status: statusFilter || undefined,
-    limit: 20,
-  });
+    category: categoryFilter || undefined,
+    startDate: dateRange[0]?.startDate
+      ? dateRange[0].startDate.toISOString()
+      : undefined,
+    endDate: dateRange[0]?.endDate
+      ? dateRange[0].endDate.toISOString()
+      : undefined,
+    minPrice: minPrice || undefined,
+    maxPrice: maxPrice || undefined,
+    tags: tags.length > 0 ? tags.join(",") : undefined,
+    featured: showFeatured ? true : undefined,
+    page: currentPage,
+    limit: pageSize,
+  };
 
-  const events = eventsResponse?.data?.items || [];
+  const handlePageChange = (page: number) => {
+    if (page >= 1 && page <= totalPages) {
+      setCurrentPage(page);
+    }
+  };
+
+  const {
+    data: eventsResponse,
+    isLoading,
+    error,
+    refetch: refetchEvents,
+  } = useEvents(queryParams);
+
+  useEffect(() => {
+    if (eventsResponse) refetchEvents();
+  }, [JSON.stringify(queryParams)]);
+
+  const allEvents: Event[] = eventsResponse?.data?.items || [];
+  const totalItems = eventsResponse?.data?.totalItems || 0;
+  const totalPages = eventsResponse?.data?.totalPages || 1;
+  const hasNextPage = eventsResponse?.data?.hasNextPage || false;
+  const hasPrevPage = eventsResponse?.data?.hasPrevPage || false;
 
   const getStatusBadgeVariant = (status: string) => {
     switch (status) {
-      case 'active':
-        return 'default';
-      case 'pending':
-        return 'secondary';
-      case 'cancelled':
-        return 'destructive';
+      case "active":
+        return "active";
+      case "pending":
+        return "pending";
+      case "cancelled":
+        return "destructive";
+      case "draft":
+        return "draft";
+      case "completed":
+        return "secondary";
       default:
-        return 'outline';
+        return "outline";
     }
   };
 
   const getStatusIcon = (status: string) => {
+    const iconClass = "h-3.5 w-3.5";
     switch (status) {
-      case 'active':
-        return <CheckCircle className="h-4 w-4" />;
-      case 'pending':
-        return <Clock className="h-4 w-4" />;
-      case 'cancelled':
-        return <XCircle className="h-4 w-4" />;
+      case "active":
+        return <CheckCircle className={iconClass} />;
+      case "pending":
+        return <Clock className={iconClass} />;
+      case "cancelled":
+        return <XCircle className={iconClass} />;
+      case "completed":
+        return <Check className={iconClass} />;
       default:
-        return <Clock className="h-4 w-4" />;
+        return <Clock className={iconClass} />;
     }
   };
 
   return (
-    <RouteProtection allowedRoles={['event-manager']}>
-      <div className="space-y-6">
-          {/* Header */}
-          <div className="flex justify-between items-center">
-            <div>
-              <h1 className="text-3xl font-bold text-foreground">My Events</h1>
-              <p className="text-muted-foreground">
-                Manage your events and track their performance
-              </p>
-            </div>
-            <Button asChild>
-              <Link href="/manager/events/create">
-                <Plus className="mr-2 h-4 w-4" />
-                Create Event
-              </Link>
-            </Button>
+    <RouteProtection allowedRoles={["event-manager"]}>
+      <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-10 space-y-12">
+        {/* Header */}
+        <div className="bg-gradient-to-r from-indigo-500 to-blue-500 dark:from-indigo-600 dark:to-blue-600 rounded-3xl p-8 shadow-xl flex flex-col md:flex-row justify-between items-center">
+          <div>
+            <h1 className="text-4xl font-extrabold text-white mb-1">
+              Event Management
+            </h1>
+            <p className="text-indigo-100 dark:text-indigo-200">
+              Search, filter, and manage all events
+            </p>
           </div>
+          <Button
+            variant="outline"
+            className="mt-4 md:mt-0 bg-white/90 hover:bg-white text-blue-600 hover:text-blue-700 dark:bg-white/10 dark:hover:bg-white/20 dark:text-white shadow-md font-medium transition-colors"
+          >
+            <Calendar className="h-5 w-5 mr-2" />
+            Export Events
+          </Button>
+        </div>
 
-          {/* Filters */}
-          <Card>
-            <CardHeader>
-              <CardTitle className="flex items-center gap-2">
-                <Filter className="h-5 w-5" />
-                Filters
-              </CardTitle>
-            </CardHeader>
-            <CardContent>
-              <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                <div className="relative">
-                  <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 h-4 w-4 text-muted-foreground" />
-                  <Input
-                    placeholder="Search your events..."
-                    value={search}
-                    onChange={(e) => setSearch(e.target.value)}
-                    className="pl-10"
-                  />
-                </div>
-                <select
-                  value={statusFilter}
-                  onChange={(e) => setStatusFilter(e.target.value)}
-                  className="flex h-10 w-full rounded-md border border-input bg-background px-3 py-2 text-sm ring-offset-background file:border-0 file:bg-transparent file:text-sm file:font-medium placeholder:text-muted-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 disabled:cursor-not-allowed disabled:opacity-50"
-                >
-                  <option value="">All Status</option>
-                  <option value="active">Active</option>
-                  <option value="pending">Pending</option>
-                  <option value="cancelled">Cancelled</option>
-                </select>
+        {/* Filters */}
+        <div className="bg-card p-6 rounded-xl shadow-md border border-border">
+          <div className="flex flex-col space-y-4">
+            <div className="flex justify-between items-center">
+              <h2 className="text-lg font-semibold">Filters</h2>
+              <div className="flex items-center space-x-2">
+
               </div>
-            </CardContent>
-          </Card>
+            </div>
+            <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4 mb-4">
+              {/* Search Input */}
+              <div className="relative col-span-2">
+                <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
+                <Input
+                  placeholder="Search events..."
+                  className="pl-9 h-10 text-sm rounded-lg"
+                  value={search}
+                  onChange={(e) => setSearch(e.target.value)}
+                />
+              </div>
 
-          {/* Events Grid */}
-          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-            {isLoading ? (
-              Array.from({ length: 6 }).map((_, i) => (
-                <Card key={i} className="overflow-hidden">
-                  <div className="h-48 bg-muted animate-pulse" />
-                  <CardContent className="p-6">
-                    <div className="space-y-2">
-                      <div className="h-4 bg-muted rounded animate-pulse" />
-                      <div className="h-3 bg-muted rounded animate-pulse w-2/3" />
-                      <div className="h-3 bg-muted rounded animate-pulse w-1/2" />
+              {/* Status Filter */}
+              <DropdownMenu>
+                <DropdownMenuTrigger asChild>
+                  <Button
+                    variant="outline"
+                    size="sm"
+                    className="h-10 gap-2 justify-between rounded-lg"
+                  >
+                    <Filter className="h-4 w-4" />
+                    <span>
+                      {statusFilter
+                        ? statusFilter.charAt(0).toUpperCase() +
+                        statusFilter.slice(1)
+                        : "All Status"}
+                    </span>
+                    <ChevronDown className="h-4 w-4 opacity-50" />
+                  </Button>
+                </DropdownMenuTrigger>
+                <DropdownMenuContent className="w-56">
+                  <div className="flex items-center justify-between px-2 py-1.5">
+                    <DropdownMenuLabel>Filter by Status</DropdownMenuLabel>
+                    <Button
+                      variant="ghost"
+                      size="sm"
+                      className="h-7 text-xs"
+                      onClick={(e) => {
+                        e.stopPropagation();
+                        setStatusFilter("");
+                      }}
+                    >
+                      Reset
+                    </Button>
+                  </div>
+                  <DropdownMenuSeparator />
+                  {[
+                    "draft",
+                    "pending",
+                    "active",
+                    "cancelled",
+                    "completed",
+                  ].map((status) => (
+                    <DropdownMenuCheckboxItem
+                      key={status}
+                      checked={statusFilter === status}
+                      onCheckedChange={() =>
+                        setStatusFilter(
+                          statusFilter === status ? "" : status
+                        )
+                      }
+                    >
+                      {status.charAt(0).toUpperCase() + status.slice(1)}
+                    </DropdownMenuCheckboxItem>
+                  ))}
+                </DropdownMenuContent>
+              </DropdownMenu>
+
+              {/* Category Filter */}
+              <DropdownMenu>
+                <DropdownMenuTrigger asChild>
+                  <Button
+                    variant="outline"
+                    size="sm"
+                    className="h-10 gap-2 justify-between rounded-lg"
+                  >
+                    <Filter className="h-4 w-4" />
+                    <span>{categoryFilter || "All Categories"}</span>
+                    <ChevronDown className="h-4 w-4 opacity-50" />
+                  </Button>
+                </DropdownMenuTrigger>
+                <DropdownMenuContent className="w-56">
+                  <div className="flex items-center justify-between px-2 py-1.5">
+                    <DropdownMenuLabel>Filter by Category</DropdownMenuLabel>
+                    <Button
+                      variant="ghost"
+                      size="sm"
+                      className="h-7 text-xs"
+                      onClick={(e) => {
+                        e.stopPropagation();
+                        setCategoryFilter("");
+                      }}
+                    >
+                      Reset
+                    </Button>
+                  </div>
+                  <DropdownMenuSeparator />
+                  {[
+                    "music",
+                    "sports",
+                    "conference",
+                    "workshop",
+                    "exhibition",
+                    "festival",
+                    "other",
+                  ].map((category) => (
+                    <DropdownMenuCheckboxItem
+                      key={category}
+                      checked={categoryFilter === category}
+                      onCheckedChange={() =>
+                        setCategoryFilter(
+                          categoryFilter === category ? "" : category
+                        )
+                      }
+                    >
+                      {category.charAt(0).toUpperCase() + category.slice(1)}
+                    </DropdownMenuCheckboxItem>
+                  ))}
+                </DropdownMenuContent>
+              </DropdownMenu>
+
+              <div className="flex items-center justify-between gap-4 col-span-1">
+                {/* Date Range Picker */}
+                <DropdownMenu>
+                  <DropdownMenuTrigger asChild>
+                    <Button
+                      variant="outline"
+                      size="sm"
+                      className="h-10 gap-2 justify-between rounded-lg min-w-[200px]"
+                    >
+                      <Calendar className="h-4 w-4" />
+                      <span>
+                        {dateRange[0]?.startDate
+                          ? `${format(dateRange[0].startDate, "MMM d")} - ${dateRange[0]?.endDate
+                            ? format(dateRange[0].endDate, "MMM d, yyyy")
+                            : ""
+                          }`
+                          : "Select date range"}
+                      </span>
+                      <ChevronDown className="h-4 w-4 opacity-50" />
+                    </Button>
+                  </DropdownMenuTrigger>
+                  <DropdownMenuContent className="w-auto p-0" align="end">
+                    <DateRange
+                      editableDateInputs={true}
+                      onChange={(item: any) => setDateRange([item.selection])}
+                      moveRangeOnFirstSelection={false}
+                      ranges={dateRange}
+                      className="border-0 dark:bg-card dark:text-foreground rounded-lg"
+                    />
+                  </DropdownMenuContent>
+                </DropdownMenu>
+
+                {/* Items per page */}
+                <DropdownMenu>
+                  <DropdownMenuTrigger asChild>
+                    <Button
+                      variant="outline"
+                      size="sm"
+                      className="h-10 flex items-center gap-2 justify-between rounded-lg w-[120px]"
+                    >
+                      <span className="text-sm">{pageSize} per page</span>
+                      <ChevronDown className="h-4 w-4 opacity-50" />
+                    </Button>
+                  </DropdownMenuTrigger>
+                  <DropdownMenuContent className="w-40">
+                    <DropdownMenuLabel className="text-xs font-normal text-muted-foreground">
+                      Rows per page
+                    </DropdownMenuLabel>
+                    <DropdownMenuSeparator />
+                    {[5, 10, 20, 50].map((count) => (
+                      <DropdownMenuItem
+                        key={count}
+                        className={`text-sm cursor-pointer ${pageSize === count ? "bg-accent" : ""}`}
+                        onClick={() => {
+                          setPageSize(count);
+                          setCurrentPage(1);
+                        }}
+                      >
+                        <div className="flex items-center w-full justify-between">
+                          <span>{count} rows</span>
+                          {pageSize === count && (
+                            <svg
+                              className="h-4 w-4 text-primary"
+                              fill="none"
+                              height="24"
+                              stroke="currentColor"
+                              strokeLinecap="round"
+                              strokeLinejoin="round"
+                              strokeWidth="2"
+                              viewBox="0 0 24 24"
+                              width="24"
+                            >
+                              <polyline points="20 6 9 17 4 12" />
+                            </svg>
+                          )}
+                        </div>
+                      </DropdownMenuItem>
+                    ))}
+                  </DropdownMenuContent>
+                </DropdownMenu>
+              </div>
+
+            </div>
+
+            {/* Advanced Filters */}
+            <div className="flex flex-wrap items-center gap-4 border-t pt-4 mt-4">
+              {/* Price Range */}
+              <div className="flex items-center gap-2">
+                <span className="text-sm text-muted-foreground">Price:</span>
+                <Input
+                  type="number"
+                  placeholder="Min"
+                  value={minPrice}
+                  onChange={(e) => setMinPrice(e.target.value)}
+                  className="h-8 w-24 text-sm rounded-lg"
+                />
+                <span className="text-muted-foreground">-</span>
+                <Input
+                  type="number"
+                  placeholder="Max"
+                  value={maxPrice}
+                  onChange={(e) => setMaxPrice(e.target.value)}
+                  className="h-8 w-24 text-sm rounded-lg"
+                />
+              </div>
+
+              {/* Tags */}
+              <div className="flex items-center gap-2 flex-wrap">
+                <span className="text-sm text-muted-foreground">Tags:</span>
+                {tags.map((tag, idx) => (
+                  <Badge
+                    key={idx}
+                    variant="secondary"
+                    className="flex items-center gap-1 text-xs h-6 px-2 rounded-full"
+                  >
+                    {tag}
+                    <button
+                      type="button"
+                      onClick={() =>
+                        setTags(tags.filter((_, i) => i !== idx))
+                      }
+                      className="ml-0.5 hover:text-destructive"
+                    >
+                      ×
+                    </button>
+                  </Badge>
+                ))}
+                <Input
+                  type="text"
+                  placeholder="Add tag"
+                  value={tagInput}
+                  onChange={(e) => setTagInput(e.target.value)}
+                  onKeyDown={(e) => {
+                    if (e.key === "Enter" && tagInput.trim()) {
+                      if (!tags.includes(tagInput.trim())) {
+                        setTags([...tags, tagInput.trim()]);
+                      }
+                      setTagInput("");
+                      e.preventDefault();
+                    }
+                  }}
+                  className="h-8 w-32 text-sm rounded-lg"
+                />
+              </div>
+
+              {/* Featured Toggle */}
+              <div className="flex items-center gap-2">
+                <span className="text-sm text-muted-foreground">Featured:</span>
+                <Switch
+                  id="featured-filter"
+                  checked={showFeatured}
+                  onCheckedChange={setShowFeatured}
+                // className="h-4 w-8"
+                />
+                <Label
+                  htmlFor="featured-filter"
+                  className="text-sm text-foreground"
+                >
+                  {showFeatured ? "Yes" : "No"}
+                </Label>
+              </div>
+
+              {/* Clear All Filters */}
+              {(search ||
+                statusFilter ||
+                categoryFilter ||
+                dateRange[0]?.startDate ||
+                minPrice ||
+                maxPrice ||
+                tags.length > 0 ||
+                showFeatured) && (
+                  <Button
+                    variant="ghost"
+                    size="sm"
+                    className="h-8 text-xs ml-auto"
+                    onClick={() => {
+                      setSearch("");
+                      setStatusFilter("");
+                      setCategoryFilter("");
+                      setDateRange([
+                        { startDate: undefined, endDate: undefined, key: "selection" },
+                      ]);
+                      setMinPrice("");
+                      setMaxPrice("");
+                      setTags([]);
+                      setShowFeatured(false);
+                    }}
+                  >
+                    Clear all filters
+                  </Button>
+                )}
+            </div>
+          </div>
+        </div>
+
+        {/* 🎟️ Event Cards */}
+        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+          {isLoading ? (
+            Array.from({ length: 6 }).map((_, i) => (
+              <div key={i} className="bg-card rounded-2xl shadow-sm border border-border overflow-hidden animate-pulse">
+                <div className="h-48 bg-muted"></div>
+                <div className="p-6 space-y-4">
+                  <div className="h-5 bg-muted rounded w-3/4"></div>
+                  <div className="h-4 bg-muted rounded w-1/2"></div>
+                  <div className="space-y-2">
+                    <div className="h-3 bg-muted rounded w-full"></div>
+                    <div className="h-3 bg-muted rounded w-5/6"></div>
+                  </div>
+                </div>
+              </div>
+
+            ))
+          ) : error ? (
+            <div className="col-span-full bg-red-50 border-l-4 border-red-400 p-4 rounded-lg">
+              <div className="flex">
+                <div className="flex-shrink-0">
+                  <XCircle className="h-5 w-5 text-red-400" />
+                </div>
+                <div className="ml-3">
+                  <p className="text-sm text-red-700">
+                    Error loading events. Please try again later.
+                  </p>
+                </div>
+              </div>
+            </div>
+          ) : allEvents.length === 0 ? (
+            <div className="col-span-full text-center py-16 bg-white/80 rounded-2xl border-2 border-dashed border-gray-200">
+              <div className="mx-auto h-24 w-24 text-gray-300 mb-4">
+                <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z" />
+                </svg>
+              </div>
+              <h3 className="text-lg font-medium text-gray-900">No events found</h3>
+              <p className="mt-1 text-sm text-gray-500">
+                {search || statusFilter || categoryFilter || dateRange[0].startDate || minPrice || maxPrice || tags.length > 0
+                  ? 'Try adjusting your filters to see more results.'
+                  : 'Get started by creating a new event.'}
+              </p>
+              <div className="mt-6">
+                <Button className="bg-blue-600 hover:bg-blue-700">
+                  <Plus className="h-4 w-4 mr-2" />
+                  Create Event
+                </Button>
+              </div>
+            </div>
+          ) : (
+            allEvents.map((event) => {
+              const lowestPriceTicket = event.tickets.length > 0
+                ? event.tickets.reduce((min, t) => t.price < min.price ? t : min, event.tickets[0])
+                : null;
+
+              return (
+                <Card
+                  key={event._id}
+                  className="overflow-hidden rounded-2xl shadow-sm hover:shadow-lg bg-card border border-border group transition-all duration-300 hover:-translate-y-1"
+                >
+                  <div className="relative h-48">
+                    <Image
+                      src={event.imageUrl || "/images/event-placeholder.jpg"}
+                      alt={event.title}
+                      fill
+                      className="object-cover group-hover:scale-105 transition-transform duration-500 ease-out"
+                      sizes="(max-width: 768px) 100vw, (max-width: 1200px) 50vw, 33vw"
+                      priority={false}
+                    />
+                    <div className="absolute inset-0 bg-gradient-to-t from-black/70 via-black/10 to-transparent"></div>
+                    <div className="absolute top-4 right-4">
+                      <Badge
+                        variant={getStatusBadgeVariant(event.status) as any}
+                        className="gap-1.5 py-1 px-2.5 font-medium"
+                      >
+                        {getStatusIcon(event.status)}
+                        <span className="capitalize">{event.status}</span>
+                      </Badge>
+                    </div>
+                  </div>
+
+                  <CardContent className="p-5">
+                    <div className="space-y-3">
+                      <div>
+                        <h3 className="font-bold text-lg text-foreground leading-tight line-clamp-2">
+                          {event.title}
+                        </h3>
+                        <p className="text-sm text-muted-foreground mt-1 line-clamp-2">
+                          {event.description}
+                        </p>
+                      </div>
+
+                      <div className="space-y-2 text-sm">
+                        <div className="flex items-start gap-2">
+                          <Calendar className="h-4 w-4 text-muted-foreground mt-0.5 flex-shrink-0" />
+                          <span className="text-foreground">
+                            {format(new Date(event.startDate), "MMM d, yyyy")}
+                            {event.endDate &&
+                              ` - ${format(new Date(event.endDate), "MMM d, yyyy")}`}
+                          </span>
+                        </div>
+                        {event.location && (
+                          <div className="flex items-start gap-2">
+                          </div>
+                        )}
+                        <div className="flex items-center gap-2">
+                          <DollarSign className="h-4 w-4 text-muted-foreground flex-shrink-0" />
+                          <span className="text-foreground">
+                            {lowestPriceTicket
+                              ? `From $${lowestPriceTicket.price.toFixed(2)}`
+                              : "Free"}
+                          </span>
+                        </div>
+                      </div>
+
+                      {/* Tickets Progress */}
+                      <div className="pt-2">
+                        <div className="flex justify-between text-xs text-gray-500 mb-1">
+                          <span>
+                            {event.tickets.reduce((total, t) => total + t.sold, 0)} sold
+                          </span>
+                          <span>
+                            {event.tickets.reduce((total, t) => total + t.quantity, 0)} total
+                          </span>
+                        </div>
+                        <div className="w-full bg-gray-200 rounded-full h-1.5">
+                          <div
+                            className="bg-blue-500 h-1.5 rounded-full"
+                            style={{
+                              width: (() => {
+                                const totalSold = event.tickets.reduce((total, t) => total + t.sold, 0);
+                                const totalQuantity = event.tickets.reduce((total, t) => total + t.quantity, 0);
+                                const percentage = totalQuantity > 0 ? (totalSold / totalQuantity) * 100 : 0;
+                                return `${Math.min(100, percentage)}%`;
+                              })(),
+                            }}
+                          ></div>
+                        </div>
+                      </div>
+
+                      <div className="flex justify-between items-center pt-2">
+                        <div className="flex -space-x-2">
+                          {Array.from({ length: 3 }).map((_, i) => (
+                            <div
+                              key={i}
+                              className="h-7 w-7 rounded-full bg-muted border-2 border-background flex items-center justify-center text-xs font-medium text-foreground"
+                            >
+                              {String.fromCharCode(65 + i)}
+                            </div>
+                          ))}
+                          <div className="h-7 w-7 rounded-full bg-muted/70 border-2 border-background flex items-center justify-center text-xs font-medium text-muted-foreground">
+                            +{Math.max(0, (event as any).attendees?.length - 3 || 0)}
+                          </div>
+                        </div>
+
+                        <Button
+                          variant="outline"
+                          size="sm"
+                          className="border-border hover:bg-accent hover:text-accent-foreground text-foreground"
+                        >
+                          View Details
+                          <ArrowRight className="ml-1 h-3.5 w-3.5" />
+                        </Button>
+                      </div>
+
                     </div>
                   </CardContent>
                 </Card>
-              ))
-            ) : error ? (
-              <div className="col-span-full text-center py-8">
-                <p className="text-destructive">Error loading events</p>
-              </div>
-            ) : events.length === 0 ? (
-              <div className="col-span-full text-center py-12">
-                <Calendar className="h-16 w-16 text-muted-foreground mx-auto mb-4" />
-                <h3 className="text-xl font-semibold mb-2">No events yet</h3>
-                <p className="text-muted-foreground mb-6">
-                  Create your first event to start managing your events
-                </p>
-                <Button asChild>
-                  <Link href="/manager/events/create">
-                    <Plus className="mr-2 h-4 w-4" />
-                    Create Your First Event
-                  </Link>
-                </Button>
-              </div>
-            ) : (
-              events.map((event) => {
-                const lowestPriceTicket = event.tickets.length > 0
-                  ? event.tickets.reduce((min: { price: number }, ticket: { price: number }) => 
-                      ticket.price < min.price ? ticket : min, event.tickets[0])
-                  : null;
-
-                const totalSold = event.tickets.reduce((total: number, ticket: { sold: number }) => total + ticket.sold, 0);
-                const totalCapacity = event.tickets.reduce((total: number, ticket: { quantity: number }) => total + ticket.quantity, 0);
-
-                return (
-                  <Card key={event._id} className="overflow-hidden hover:shadow-lg transition-shadow">
-                    <div className="h-48 relative">
-                      <Image 
-                        src={event.imageUrl || '/images/event-placeholder.jpg'} 
-                        alt={event.title}
-                        fill
-                        className="object-cover"
-                        sizes="(max-width: 768px) 100vw, (max-width: 1200px) 50vw, 33vw"
-                      />
-                      <div className="absolute top-4 right-4">
-                        <Badge variant={getStatusBadgeVariant(event.status)} className="text-xs">
-                          {getStatusIcon(event.status)}
-                          {event.status}
-                        </Badge>
-                      </div>
-                      {!event.verified && (
-                        <div className="absolute top-4 left-4">
-                          <Badge variant="default" className="text-xs bg-amber-500 hover:bg-amber-500/90 text-white border-amber-600">
-                            <Clock className="h-3 w-3 mr-1" />
-                            Pending Review
-                          </Badge>
-                        </div>
-                      )}
-                    </div>
-                    <CardContent className="p-6">
-                      <div className="space-y-3">
-                        <div>
-                          <h3 className="font-semibold text-lg line-clamp-2">{event.title}</h3>
-                          <p className="text-sm text-muted-foreground line-clamp-2">{event.description}</p>
-                        </div>
-                        
-                        <div className="space-y-2 text-sm text-muted-foreground">
-                          <div className="flex items-center gap-2">
-                            <Calendar className="h-4 w-4" />
-                            <span>
-                              {format(new Date(event.startDate), 'MMM d, yyyy')}
-                              {event.endDate && ` - ${format(new Date(event.endDate), 'MMM d, yyyy')}`}
-                            </span>
-                          </div>
-                          {event.location && (
-                            <div className="flex items-center gap-2">
-                              <MapPin className="h-4 w-4" />
-                              <span className="truncate">{event.location}</span>
-                            </div>
-                          )}
-                          <div className="flex items-center gap-2">
-                            <DollarSign className="h-4 w-4" />
-                            <span>
-                              {lowestPriceTicket 
-                                ? `From $${lowestPriceTicket.price.toFixed(2)}` 
-                                : 'Free'}
-                            </span>
-                          </div>
-                        </div>
-
-                        <div className="space-y-2">
-                          <div className="flex justify-between items-center">
-                            <div className="flex items-center gap-2">
-                              <Users className="h-4 w-4 text-muted-foreground" />
-                              <span className="text-sm text-muted-foreground">
-                                {totalSold} / {totalCapacity} sold
-                              </span>
-                            </div>
-                            <div className="text-sm font-medium">
-                              {totalCapacity > 0 ? Math.round((totalSold / totalCapacity) * 100) : 0}% sold
-                            </div>
-                          </div>
-                          <div className="w-full bg-muted rounded-full h-2">
-                            <div 
-                              className="bg-primary h-2 rounded-full transition-all duration-300"
-                              style={{ width: `${totalCapacity > 0 ? (totalSold / totalCapacity) * 100 : 0}%` }}
-                            />
-                          </div>
-                        </div>
-
-                        <div className="flex justify-between items-center pt-2">
-                          <div className="flex gap-2">
-                            <Button variant="outline" size="sm" asChild>
-                              <Link href={`/manager/events/${event._id}/edit`}>
-                                <Edit className="h-4 w-4" />
-                              </Link>
-                            </Button>
-                            <Button variant="outline" size="sm" asChild>
-                              <Link href={`/events/${event._id}`}>
-                                <Eye className="h-4 w-4" />
-                              </Link>
-                            </Button>
-                          </div>
-                          <Button variant="ghost" size="sm">
-                            <MoreHorizontal className="h-4 w-4" />
-                          </Button>
-                        </div>
-                      </div>
-                    </CardContent>
-                  </Card>
-                );
-              })
-            )}
-          </div>
+              );
+            }))}
         </div>
+
+        {/* Pagination */}
+        {totalPages > 1 && (
+          <CardFooter className="flex items-center justify-between px-6 py-4 border-t mt-6">
+            <div className="text-sm text-muted-foreground">
+              Page {currentPage} of {totalPages}
+            </div>
+            <div className="flex items-center space-x-2">
+              <Button
+                variant="outline"
+                size="sm"
+                onClick={() => handlePageChange(currentPage - 1)}
+                disabled={currentPage === 1}
+              >
+                <ChevronLeft className="h-4 w-4 mr-1" /> Previous
+              </Button>
+              <div className="flex items-center space-x-1">
+                {Array.from({ length: Math.min(5, totalPages) }, (_, i) => {
+                  let pageNum;
+                  if (totalPages <= 5) {
+                    pageNum = i + 1;
+                  } else if (currentPage <= 3) {
+                    pageNum = i + 1;
+                  } else if (currentPage >= totalPages - 2) {
+                    pageNum = totalPages - 4 + i;
+                  } else {
+                    pageNum = currentPage - 2 + i;
+                  }
+
+                  if (i === 3 && currentPage < totalPages - 3) {
+                    return <span key="ellipsis" className="px-2">...</span>;
+                  }
+                  if (i === 1 && currentPage > 4) {
+                    return <span key="ellipsis-start" className="px-2">...</span>;
+                  }
+
+                  return (
+                    <Button
+                      key={pageNum}
+                      variant={currentPage === pageNum ? "default" : "outline"}
+                      size="sm"
+                      className={`w-10 h-10 p-0 ${currentPage === pageNum ? 'bg-primary text-primary-foreground' : ''}`}
+                      onClick={() => handlePageChange(pageNum)}
+                    >
+                      {pageNum}
+                    </Button>
+                  );
+                })}
+              </div>
+              <Button
+                variant="outline"
+                size="sm"
+                onClick={() => handlePageChange(currentPage + 1)}
+                disabled={currentPage >= totalPages}
+              >
+                Next <ChevronRight className="h-4 w-4 ml-1" />
+              </Button>
+            </div>
+          </CardFooter>
+        )}
+      </div>
     </RouteProtection>
   );
 }

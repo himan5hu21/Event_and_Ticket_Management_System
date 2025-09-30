@@ -1,7 +1,9 @@
-import { Suspense } from 'react';
-import AdminLayout from "@/components/layouts/AdminLayout";
+import { lazy, Suspense } from 'react';
+// import AdminLayout from "@/components/layouts/AdminLayout";
 import RouteProtection from "@/components/auth/RouteProtection";
 import { Loader2 } from 'lucide-react';
+
+const AdminLayout = lazy(() => import("@/components/layouts/AdminLayout"));
 
 export default function AdminPageLayout({ children }: { children: React.ReactNode }) {
   // Custom loader component that will be shown in the content area
@@ -16,7 +18,6 @@ export default function AdminPageLayout({ children }: { children: React.ReactNod
     <RouteProtection 
       allowedRoles={['admin']}
       loaderComponent={contentLoader}
-      loaderClassName="flex-1"
     >
       <Suspense fallback={contentLoader}>
         <AdminLayout>{children}</AdminLayout>

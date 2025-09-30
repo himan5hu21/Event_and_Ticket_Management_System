@@ -16,6 +16,8 @@ const eventApi = {
     organizer?: string;
     date?: string;
     sort?: string;
+    tags?: string | string[];
+    featured?: boolean;
   }): Promise<PaginatedResponse<Event>> => {
     const response = await apiClient.get(EVENTS_ENDPOINT, { 
       params: {

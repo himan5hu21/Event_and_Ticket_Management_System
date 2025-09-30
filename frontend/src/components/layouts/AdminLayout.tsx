@@ -1,15 +1,25 @@
 "use client";
 
-import { ReactNode } from "react";
+import { ReactNode, Suspense } from "react";
 import AdminSidebar from "../sidebars/AdminSidebar";
 import AdminHeader from "../headers/AdminHeader";
 import AdminFooter from "../footers/AdminFooter";
+import { Loader2 } from "lucide-react";
 
 interface LayoutProps {
   children: ReactNode;
 }
 
+
 export default function AdminLayout({ children }: LayoutProps) {
+
+  const contentLoader = (
+    <div className="flex items-center justify-center p-12">
+      <Loader2 className="h-8 w-8 animate-spin text-primary" />
+      <span className="ml-2">Loading...</span>
+    </div>
+  );
+
   return (
     <div className="flex h-screen w-full overflow-hidden bg-background">
       {/* Fixed Sidebar */}
@@ -28,7 +38,8 @@ export default function AdminLayout({ children }: LayoutProps) {
         <div className="flex-1 overflow-y-auto bg-admin-bg-secondary relative">
           <main className="p-6 min-h-full">
             <div className="max-w-7xl mx-auto h-full">
-              {children}
+                 {/* Only the page content is lazy-loaded */}
+                 <Suspense fallback={contentLoader}>{children}</Suspense>
             </div>
           </main>
           

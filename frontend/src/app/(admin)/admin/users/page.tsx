@@ -274,7 +274,7 @@ export default function AdminUsersPage() {
 
   const handleDeleteUser = async () => {
     if (!userToDelete) return;
-    
+
     setIsDeleting(true);
     try {
       const deletedUser = await deleteUserMutation.mutateAsync(userToDelete);
@@ -320,7 +320,7 @@ export default function AdminUsersPage() {
 
   const handleVerificationConfirm = async () => {
     if (!verificationDialog.userId) return;
-    
+
     try {
       await handleVerifyUser(verificationDialog.userId, !verificationDialog.isVerified);
       toast.success(
@@ -348,7 +348,7 @@ export default function AdminUsersPage() {
           className="focus:outline-none"
           aria-label={user.verified ? 'Verified' : 'Pending verification'}
         >
-          <Badge 
+          <Badge
             variant={user.verified ? 'verified' : 'pending'}
             className="cursor-pointer transition-all hover:opacity-80 flex items-center gap-1.5"
           >
@@ -367,11 +367,11 @@ export default function AdminUsersPage() {
         </button>
       );
     }
-    
+
     // For customers, show active status with appropriate styling
     return (
-      <Badge 
-        variant="secondary" 
+      <Badge
+        variant="secondary"
         className="text-muted-foreground flex items-center gap-1.5"
       >
         <Check className="h-3 w-3" />
@@ -611,11 +611,11 @@ export default function AdminUsersPage() {
                       >
                         <Shield className="h-4 w-4" />
                         <span>
-                          { roleFilter.length === 2
+                          {roleFilter.length === 2
                             ? `All roles`
                             : roleFilter[0]
-                            ? roleFilter[0].charAt(0).toUpperCase() + roleFilter[0].slice(0).replace("-", " ")
-                            : "Roles"}
+                              ? roleFilter[0].charAt(0).toUpperCase() + roleFilter[0].slice(0).replace("-", " ")
+                              : "Roles"}
                         </span>
                         <ChevronDown className="h-4 w-4 opacity-50" />
                       </Button>
@@ -719,9 +719,8 @@ export default function AdminUsersPage() {
                     {[5, 10, 20, 50].map((count) => (
                       <DropdownMenuItem
                         key={count}
-                        className={`text-sm cursor-pointer ${
-                          itemsPerPage === count ? "bg-accent" : ""
-                        }`}
+                        className={`text-sm cursor-pointer ${itemsPerPage === count ? "bg-accent" : ""
+                          }`}
                         onClick={() => {
                           setItemsPerPage(count);
                           setCurrentPage(1);
@@ -859,9 +858,9 @@ export default function AdminUsersPage() {
                           <h4 className="font-medium">No users found</h4>
                           <p className="text-sm text-muted-foreground">
                             {search ||
-                            organizationFilter ||
-                            roleFilter.length < 3 ||
-                            verifiedFilter !== null
+                              organizationFilter ||
+                              roleFilter.length < 3 ||
+                              verifiedFilter !== null
                               ? "Try adjusting your search or filter criteria"
                               : "There are no users in the system yet"}
                           </p>
@@ -888,7 +887,7 @@ export default function AdminUsersPage() {
                         </Badge>
                       </td>
                       <td className="p-4">
-                      {getStatusBadge(user)}
+                        {getStatusBadge(user)}
                       </td>
                       <td className="p-4 text-muted-foreground">
                         {user.organization || "-"}
@@ -920,7 +919,7 @@ export default function AdminUsersPage() {
                                 <span>Edit</span>
                               </DropdownMenuItem>
                               <DropdownMenuSeparator />
-                              <DropdownMenuItem 
+                              <DropdownMenuItem
                                 className="cursor-pointer text-destructive focus:text-destructive focus:bg-destructive/10"
                                 onClick={(e) => {
                                   e.stopPropagation();
@@ -996,31 +995,31 @@ export default function AdminUsersPage() {
 
       {/* Verification Dialog */}
       <VerificationDialog
-  open={verificationDialog.open}
-  onOpenChange={(open) => setVerificationDialog(prev => ({ ...prev, open }))}
-  isVerified={verificationDialog.isVerified}
-  onConfirm={handleVerificationConfirm}
-  userName={verificationDialog.userName}
-/>
+        open={verificationDialog.open}
+        onOpenChange={(open) => setVerificationDialog(prev => ({ ...prev, open }))}
+        isVerified={verificationDialog.isVerified}
+        onConfirm={handleVerificationConfirm}
+        userName={verificationDialog.userName}
+      />
 
       {/* User Dialog */}
-      <Dialog open={dialogOpen}   onOpenChange={(open) => {
-    setDialogOpen(open);
+      <Dialog open={dialogOpen} onOpenChange={(open) => {
+        setDialogOpen(open);
 
-    if (!open) {
-      // Dialog is being closed, reset form and clear selected user
-      reset({
-        name: '',
-        email: '',
-        phone: '',
-        organization: '',
-        role: 'customer',
-        verified: false,
-      });
-      setSelectedUserId(null);
-      setDialogMode(null);
-    }
-  }}>
+        if (!open) {
+          // Dialog is being closed, reset form and clear selected user
+          reset({
+            name: '',
+            email: '',
+            phone: '',
+            organization: '',
+            role: 'customer',
+            verified: false,
+          });
+          setSelectedUserId(null);
+          setDialogMode(null);
+        }
+      }}>
         <DialogContent className="sm:max-w-[600px] max-h-[90vh] overflow-y-auto">
           <DialogHeader className="border-b pb-4">
             <div className="flex items-center space-x-3">
@@ -1413,7 +1412,7 @@ export default function AdminUsersPage() {
               </div>
             </div>
           </DialogHeader>
-          
+
           <div className="py-4 space-y-4">
             <p className="text-sm text-foreground">
               Are you sure you want to delete this user? All associated data will be permanently removed.
@@ -1425,18 +1424,18 @@ export default function AdminUsersPage() {
               </p>
             </div>
           </div>
-          
+
           <DialogFooter className="gap-2">
-            <Button 
-              type="button" 
-              variant="outline" 
+            <Button
+              type="button"
+              variant="outline"
               onClick={() => setDeleteDialogOpen(false)}
               disabled={isDeleting}
             >
               Cancel
             </Button>
-            <Button 
-              type="button" 
+            <Button
+              type="button"
               variant="destructive"
               onClick={handleDeleteUser}
               disabled={isDeleting}

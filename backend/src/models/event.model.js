@@ -60,7 +60,7 @@ const eventSchema = new Schema(
     verified: { type: Boolean, default: false },
     status: {
       type: String,
-      enum: ["pending", "active", "completed", "cancelled"],
+      enum: ["pending", "active", "completed", "cancelled", "closed"],
       default: "pending",
     },
     tags: [{ type: String, trim: true }],

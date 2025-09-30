@@ -95,6 +95,8 @@ export const getAllEvents = async (req, res, next) => {
       minPrice,
       maxPrice,
       type,
+      tags,
+      featured,
       ...filters
     } = req.query;
 
@@ -130,6 +132,17 @@ export const getAllEvents = async (req, res, next) => {
         queryFilter.$and = queryFilter.$and || [];
         queryFilter.$and.push(...dateConditions);
       }
+    }
+
+    if (tags) {
+      const tags = Array.isArray(tags)
+        ? tags
+        : tags.split(","); // support CSV or multiple query params
+      queryFilter.tags = { $in: tags };
+    }
+
+    if (featured !== undefined) {
+      queryFilter.featured = featured === "true";
     }
 
     const ticketFilters = {};
@@ -172,13 +185,14 @@ export const getAllEvents = async (req, res, next) => {
         queryFilter.status = Array.isArray(status) ? { $in: status } : status;
       }
     } else if (role === "event-manager") {
+      // const allowedStatus = ["pending", "active", "closed"];
       const allowedStatus = ["pending", "active"];
       const ownEventsFilter = { createdBy: userId };
 
       const otherEventsFilter = {
         createdBy: { $ne: userId },
         verified: true,
-        status: { $in: allowedStatus },
+        status: { $in: allowedStatus }, // { $in: ["pending", "active"] },
       };
 
       if (status) {
