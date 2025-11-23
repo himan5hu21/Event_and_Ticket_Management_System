@@ -3,7 +3,7 @@ import cloudinary from "../config/cloudinary.js";
 
 export const createEvent = async (req, res, next) => {
   try {
-    const { title, description, tickets, date, category, subcategory } =
+    const { title, description, tickets, startDate, endDate, category, subcategory, tags } =
       req.body;
 
     let imageUrl = null;
@@ -39,10 +39,11 @@ export const createEvent = async (req, res, next) => {
       imageUrl: imageUrl,
       imageId: imagePublicId,
       tickets: JSON.parse(tickets),
-      date: new Date(date),
+      startDate: new Date(startDate),
+      endDate: new Date(endDate),
       category,
       subcategory,
-
+      tags,
       createdBy: req.user._id,
       status: "pending",
     });
@@ -64,7 +65,11 @@ export const verifyEvent = async (req, res, next) => {
 
     const event = await Event.findByIdAndUpdate(
       eventId,
-      { verified: true },
+      {
+        verified: true,
+        status: 'approved',
+        rejectionReason: undefined // Clear any previous rejection reason
+      },
       { new: true }
     );
 
@@ -73,6 +78,56 @@ export const verifyEvent = async (req, res, next) => {
     }
 
     res.success(event, "Event verified successfully");
+  } catch (err) {
+    next(err);
+  }
+};
+
+export const rejectEvent = async (req, res, next) => {
+  try {
+    const eventId = req.params.eventId;
+    const { reason } = req.body;
+
+    const event = await Event.findByIdAndUpdate(
+      eventId,
+      {
+        verified: false,
+        status: 'rejected',
+        rejectionReason: reason || 'Event does not meet our guidelines'
+      },
+      { new: true }
+    );
+
+    if (!event) {
+      return res.notFound("Event not found");
+    }
+
+    res.success(event, "Event has been rejected");
+  } catch (err) {
+    next(err);
+  }
+};
+
+export const cancelEvent = async (req, res, next) => {
+  try {
+    const { eventId } = req.params;
+
+    // We can add more logic here, e.g., check if user is admin or owner
+    const event = await Event.findByIdAndUpdate(
+      eventId,
+      {
+        status: 'cancelled',
+      },
+      { new: true }
+    );
+
+    if (!event) {
+      return res.notFound("Event not found");
+    }
+
+    // You might also want to handle refunding tickets here
+
+    res.success(event, "Event has been cancelled");
   } catch (err) {
     next(err);
   }
@@ -134,11 +189,10 @@ export const getAllEvents = async (req, res, next) => {
       }
     }
 
+    // Handle tags filtering
     if (tags) {
-      const tags = Array.isArray(tags)
-        ? tags
-        : tags.split(","); // support CSV or multiple query params
-      queryFilter.tags = { $in: tags };
+      const tagsArray = Array.isArray(tags) ? tags : tags.split(",");
+      queryFilter.tags = { $in: tagsArray };
     }
 
     if (featured !== undefined) {
@@ -146,6 +200,7 @@ export const getAllEvents = async (req, res, next) => {
     }
 
     const ticketFilters = {};
+
 
     if (minPrice || maxPrice) {
       const priceFilter = {};
@@ -185,7 +240,6 @@ export const getAllEvents = async (req, res, next) => {
         queryFilter.status = Array.isArray(status) ? { $in: status } : status;
       }
     } else if (role === "event-manager") {
-      // const allowedStatus = ["pending", "active", "closed"];
       const allowedStatus = ["pending", "active"];
       const ownEventsFilter = { createdBy: userId };
 
@@ -220,8 +274,8 @@ export const getAllEvents = async (req, res, next) => {
           queryFilter.status = allowedStatus.includes(status)
             ? status
             : {
-                $in: ["pending", "active"],
-              };
+              $in: ["pending", "active"],
+            };
         }
       } else {
         queryFilter.status = { $in: ["pending", "active"] };
@@ -360,7 +414,7 @@ export const getAllEvents = async (req, res, next) => {
 export const updateEvent = async (req, res, next) => {
   try {
     const { eventId } = req.params;
-    const { title, description, tickets, date, category, subcategory } =
+    const { title, description, tickets, startDate, endDate, category, subcategory, tags } =
       req.body;
 
     const event = await Event.findById(eventId);
@@ -409,9 +463,11 @@ export const updateEvent = async (req, res, next) => {
     if (title) event.title = title;
     if (description) event.description = description;
     if (tickets) event.tickets = tickets;
-    if (date) event.date = date;
+    if (startDate) event.startDate = startDate;
+    if (endDate) event.endDate = endDate;
     if (category) event.category = category;
     if (subcategory) event.subcategory = subcategory;
+    if (tags) event.tags = tags;
 
     const updateEvent = await event.save();
 

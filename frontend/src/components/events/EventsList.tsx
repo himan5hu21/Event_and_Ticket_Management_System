@@ -19,7 +19,7 @@ import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Skeleton } from "@/components/ui/skeleton";
 
-import { useEvents } from "@/hooks/useEvents";
+import { useEvents } from "@/hooks/api";
 
 type UserRole = 'admin' | 'event-manager' | 'customer';
 
@@ -63,6 +63,9 @@ export function EventsList({
   showStats = false,
 }: EventsListProps) {
   const router = useRouter();
+
+  const [currentPage, setCurrentPage] = useState(1);
+  const [limit, setLimit] = useState(10); // Default page size
   
   // Initialize filters based on user role
   const [filters, setFilters] = useState<Filters>({
@@ -100,39 +103,23 @@ export function EventsList({
     return [{ value: 'active', label: 'Active' }];
   }, [userRole]);
 
-  // Build query params from filters
-  const buildQueryParams = (): string => {
-    const params: Record<string, string> = {
-      page: '1', // Default to first page
-      limit: '10', // Default page size
-    };
-    
-    if (filters.search) params.search = filters.search;
-    if (filters.status.length > 0) params.status = filters.status.join(',');
-    if (filters.category) params.category = filters.category;
-    if (filters.startDate) params.startDate = filters.startDate.toISOString();
-    if (filters.endDate) {
-      const endOfDay = new Date(filters.endDate);
+  const queryParams = {
+    page: currentPage,
+    limit: limit,
+    search: filters.search || undefined,
+    status: filters.status.length > 0 ? filters.status.join(',') : defaultFilters.status || undefined,
+    category: filters.category || undefined,
+    startDate: filters.startDate ? filters.startDate.toISOString() : undefined,
+    endDate: filters.endDate ? (() => {
+      const endOfDay = new Date(filters.endDate!);
       endOfDay.setHours(23, 59, 59, 999);
-      params.endDate = endOfDay.toISOString();
-    }
-    if (filters.minPrice) params.minPrice = filters.minPrice;
-    if (filters.maxPrice) params.maxPrice = filters.maxPrice;
-    if (filters.sortBy) params.sortBy = filters.sortBy;
-    if (filters.sortOrder) params.order = filters.sortOrder;
-    
-    // Add role-specific filters
-    if (defaultFilters.status) params.status = defaultFilters.status;
-    if (defaultFilters.createdBy) params.organizer = defaultFilters.createdBy;
-    
-    return new URLSearchParams(params).toString();
+      return endOfDay.toISOString();
+    })() : undefined,
+    minPrice: filters.minPrice || undefined,
+    maxPrice: filters.maxPrice || undefined,
+    sort: filters.sortBy ? `${filters.sortOrder === 'desc' ? '-' : ''}${filters.sortBy}` : undefined,
+    organizer: defaultFilters.createdBy || undefined,
   };
-  
-  // Get current query params
-  const queryParams = buildQueryParams();
-  const urlParams = new URLSearchParams(queryParams);
-  const currentPage = parseInt(urlParams.get('page') || '1', 10);
-  const limit = parseInt(urlParams.get('limit') || '10', 10);
 
   // Fetch events with current filters
   const { data, isLoading, error, refetch } = useEvents(queryParams);
@@ -142,6 +129,7 @@ export function EventsList({
       ...prev,
       [name]: value
     }));
+    setCurrentPage(1); // Reset to first page on filter change
   };
 
   // Reset all filters
@@ -157,6 +145,7 @@ export function EventsList({
       sortBy: 'date',
       sortOrder: 'asc',
     });
+    setCurrentPage(1);
   };
 
   // Get status badge with icon
@@ -463,26 +452,16 @@ export function EventsList({
             <Button
               variant="outline"
               size="sm"
-              onClick={() => {
-                // Update query params for previous page
-                const newParams = new URLSearchParams(queryParams);
-                newParams.set('page', String(currentPage - 1));
-                router.push(`?${newParams.toString()}`);
-              }}
-              disabled={currentPage <= 1}
+              onClick={() => setCurrentPage(currentPage - 1)}
+              disabled={!data.data.hasPrevPage}
             >
               Previous
             </Button>
             <Button
               variant="outline"
               size="sm"
-              onClick={() => {
-                // Update query params for next page
-                const newParams = new URLSearchParams(queryParams);
-                newParams.set('page', String(currentPage + 1));
-                router.push(`?${newParams.toString()}`);
-              }}
-              disabled={currentPage * limit >= data.data.totalItems}
+              onClick={() => setCurrentPage(currentPage + 1)}
+              disabled={!data.data.hasNextPage}
             >
               Next
             </Button>

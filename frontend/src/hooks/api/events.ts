@@ -6,7 +6,7 @@ import { Event, CreateEventData, UpdateEventData, ApiResponse, PaginatedResponse
 const EVENTS_ENDPOINT = '/event/list';
 
 // Event API functions
-const eventApi = {
+export const eventApi = {
   getEvents: async (params?: {
     page?: number;
     limit?: number;
@@ -18,21 +18,22 @@ const eventApi = {
     sort?: string;
     tags?: string | string[];
     featured?: boolean;
+    verified?: boolean;
   }): Promise<PaginatedResponse<Event>> => {
-    const response = await apiClient.get(EVENTS_ENDPOINT, { 
+    const response = await apiClient.get(EVENTS_ENDPOINT, {
       params: {
         ...params,
         page: params?.page || 1,
         limit: params?.limit || 10,
         sortBy: params?.sort?.startsWith('-') ? params.sort.substring(1) : params?.sort,
         order: params?.sort?.startsWith('-') ? 'desc' : 'asc'
-      } 
+      }
     });
-    
+
     // Transform the response to match the expected PaginatedResponse format
     const { data } = response;
     const { events, pagination } = data.data;
-    
+
     return {
       success: data.success,
       message: data.message,
@@ -48,7 +49,7 @@ const eventApi = {
   },
 
   getEventById: async (id: string): Promise<ApiResponse<Event>> => {
-    const response = await apiClient.get(`/event/${id}`);
+    const response = await apiClient.get(`/event/list/${id}`);
     // The API returns the event data directly in the response
     return response.data;
   },
@@ -75,6 +76,11 @@ const eventApi = {
 
   cancelEvent: async (id: string): Promise<ApiResponse<Event>> => {
     const response = await apiClient.patch(`${EVENTS_ENDPOINT}/${id}/cancel`);
+    return response.data;
+  },
+
+  rejectEvent: async (id: string, reason?: string): Promise<ApiResponse<Event>> => {
+    const response = await apiClient.patch(`/event/reject/${id}`, { reason });
     return response.data;
   },
 
@@ -111,11 +117,17 @@ export const useEvents = (params?: {
   organizer?: string;
   date?: string;
   sort?: string;
+  verified?: boolean;
 }) => {
   return useQuery<PaginatedResponse<Event>, Error>({
     queryKey: ['events', params],
     queryFn: async () => {
-      const response = await eventApi.getEvents(params);
+      // Extract verified from params and pass it to getEvents
+      const { verified, ...restParams } = params || {};
+      const response = await eventApi.getEvents({
+        ...restParams,
+        verified: verified
+      });
       return response;
     },
     placeholderData: (previousData) => previousData,
@@ -148,7 +160,7 @@ export const useMyEvents = (params?: {
 
 export const useCreateEvent = () => {
   const queryClient = useQueryClient();
-  
+
   return useMutation<ApiResponse<Event>, Error, CreateEventData>({
     mutationFn: eventApi.createEvent,
     onSuccess: () => {
@@ -160,7 +172,7 @@ export const useCreateEvent = () => {
 
 export const useUpdateEvent = () => {
   const queryClient = useQueryClient();
-  
+
   return useMutation<ApiResponse<Event>, Error, { id: string; data: UpdateEventData }>({
     mutationFn: ({ id, data }) => eventApi.updateEvent(id, data),
     onSuccess: (_, { id }) => {
@@ -173,7 +185,7 @@ export const useUpdateEvent = () => {
 
 export const useDeleteEvent = () => {
   const queryClient = useQueryClient();
-  
+
   return useMutation<ApiResponse<void>, Error, string>({
     mutationFn: (id) => eventApi.deleteEvent(id),
     onSuccess: () => {
@@ -185,7 +197,7 @@ export const useDeleteEvent = () => {
 
 export const usePublishEvent = () => {
   const queryClient = useQueryClient();
-  
+
   return useMutation<ApiResponse<Event>, Error, string>({
     mutationFn: (id) => eventApi.publishEvent(id),
     onSuccess: (_, id) => {
@@ -198,7 +210,7 @@ export const usePublishEvent = () => {
 
 export const useCancelEvent = () => {
   const queryClient = useQueryClient();
-  
+
   return useMutation<ApiResponse<Event>, Error, string>({
     mutationFn: (id) => eventApi.cancelEvent(id),
     onSuccess: (data, id) => {
@@ -212,16 +224,29 @@ export const useCancelEvent = () => {
   });
 };
 
+export const useRejectEvent = () => {
+  const queryClient = useQueryClient();
+
+  return useMutation<ApiResponse<Event>, Error, { id: string; reason?: string }>({
+    mutationFn: ({ id, reason }) => eventApi.rejectEvent(id, reason),
+    onSuccess: (_, { id }) => {
+      queryClient.invalidateQueries({ queryKey: ['events'] });
+      queryClient.invalidateQueries({ queryKey: ['events', id] });
+      queryClient.invalidateQueries({ queryKey: ['events', 'my-events'] });
+    },
+  });
+};
+
 export const useUploadEventImage = () => {
   const queryClient = useQueryClient();
-  
+
   return useMutation<ApiResponse<{ imageUrl: string }>, Error, { id: string; file: File }>({
     mutationFn: ({ id, file }) => eventApi.uploadEventImage(id, file),
     onSuccess: (data, { id }) => {
       queryClient.invalidateQueries({ queryKey: ['events'] });
       queryClient.invalidateQueries({ queryKey: ['events', id] });
       queryClient.invalidateQueries({ queryKey: ['events', 'my-events'] });
-      
+
       if (data.data) {
         // Update the event data with the new image URL
         queryClient.setQueryData<ApiResponse<Event>>(['events', id], (oldData) => {

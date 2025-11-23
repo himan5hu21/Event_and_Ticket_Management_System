@@ -5,7 +5,7 @@ import cron from "node-cron";
 import updateTicketAfterEvent from "./updateTicketAfterEvent.js";
 
 const initCronJobs = () => {
-  cron.schedule("*/30 * * * * *", async () => {
+  cron.schedule("*/5 * * * *", async () => {
     const now = new Date();
 
     try {

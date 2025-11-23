@@ -1,11 +1,12 @@
 import express from "express";
-import protect from "../middleware/authMiddleware.js";
 import checkEventPermission from "../middleware/checkEventPermission.js";
 import {
+  cancelEvent,
   createEvent,
   deleteEvent,
   getAllEvents,
   getOwnedEvent,
+  rejectEvent,
   singleEvent,
   updateEvent,
   verifyEvent,
@@ -13,8 +14,14 @@ import {
 import { checkAdmin } from "../middleware/checkAdmin.js";
 import optionalAuth from "../middleware/optionalAuth.js";
 import upload from "../utils/multer.js";
+import protect from "../middleware/authMiddleware.js";
 
 const router = express.Router();
+
+router.use((req, res, next) => {
+  console.log("Event Router hit:", req.method, req.url);
+  next();
+});
 
 router.post(
   "/create",
@@ -37,8 +44,11 @@ router.get("/list", optionalAuth, getAllEvents);
 router.get("/list/:eventId", singleEvent);
 router.get("/owner/", protect, checkEventPermission, getOwnedEvent);
 
+router.patch("/list/:eventId/cancel", protect, cancelEvent);
+
 // Admin
-router.put("/verify/:eventId", protect, checkAdmin, verifyEvent);
+router.patch("/verify/:eventId", protect, checkAdmin, verifyEvent);
+router.patch("/reject/:eventId", protect, checkAdmin, rejectEvent);
 
 // Admin: Mark/unmark event as featured
 router.put("/feature/:eventId", protect, checkAdmin, async (req, res, next) => {

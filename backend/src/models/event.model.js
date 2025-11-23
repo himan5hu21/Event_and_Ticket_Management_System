@@ -60,8 +60,13 @@ const eventSchema = new Schema(
     verified: { type: Boolean, default: false },
     status: {
       type: String,
-      enum: ["pending", "active", "completed", "cancelled", "closed"],
+      enum: ["pending", "approved", "rejected", "active", "completed", "cancelled", "closed"],
       default: "pending",
+    },
+    rejectionReason: {
+      type: String,
+      default: null,
+      trim: true
     },
     tags: [{ type: String, trim: true }],
     featured: { type: Boolean, default: false },

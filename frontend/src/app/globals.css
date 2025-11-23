@@ -238,3 +238,31 @@
     @apply bg-background text-foreground;
   }
 }
+
+
+
+/* Dark mode overrides for react-date-range */
+.date-range-custom {
+  --rdr-primary-color: hsl(var(--primary));
+  --rdr-neutral-color: hsl(var(--muted-foreground));
+  --rdr-background-color: hsl(var(--card));
+  --rdr-text-color: hsl(var(--foreground));
+}
+
+.dark .date-range-custom .rdrCalendarWrapper {
+  background-color: var(--rdr-background-color);
+  color: var(--rdr-text-color);
+}
+
+.dark .date-range-custom .rdrMonth {
+  background-color: transparent;
+}
+
+.dark .date-range-custom .rdrDayNumber span {
+  color: var(--rdr-text-color);
+}
+
+.dark .date-range-custom .rdrDayDisabled {
+  opacity: 0.4;
+}
+
